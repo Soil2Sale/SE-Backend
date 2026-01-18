@@ -5,8 +5,11 @@ import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
-  getRefreshTokenExpiry
+  getRefreshTokenExpiry,
+  generateResetPasswordToken,
+  verifyResetPasswordToken
 } from "../utils/jwt";
+import { sendResetPasswordEmail } from "../middlewares/mail/mailer";
 
 const setRefreshTokenCookie = (res: Response, token: string): void => {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -220,6 +223,91 @@ export const logout = async (
     res.status(200).json({
       success: true,
       message: "Logout successful",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    const resetToken = generateResetPasswordToken(user._id, user.email);
+
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+    const resetLink = `${clientUrl}/auth/reset-password?token=${resetToken}`;
+
+    await sendResetPasswordEmail(user.email, resetLink);
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset email sent successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      res.status(400).json({
+        success: false,
+        message: "Token and password are required",
+      });
+      return;
+    }
+
+    let decoded;
+    try {
+      decoded = verifyResetPasswordToken(token);
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token",
+      });
+      return;
+    }
+
+    const user = await User.findOne({
+      _id: decoded.userId,
+      email: decoded.email
+    });
+
+    if (!user) {
+      res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    user.password = password;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
     });
   } catch (error) {
     next(error);

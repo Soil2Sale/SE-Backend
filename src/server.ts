@@ -9,6 +9,9 @@ import { connectDB } from './config/database';
 import { errorHandler } from './middlewares/errorHandler';
 import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
+import farmerProfileRoutes from './routes/farmerProfileRoutes';
+import farmerCropRoutes from './routes/farmerCropRoutes';
+import cropListingRoutes from './routes/cropListingRoutes';
 
 dotenv.config();
 
@@ -27,6 +30,9 @@ app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/farmer-profiles', farmerProfileRoutes);
+app.use('/api/farmer-crops', farmerCropRoutes);
+app.use('/api/crop-listings', cropListingRoutes);
 
 app.use(errorHandler);
 

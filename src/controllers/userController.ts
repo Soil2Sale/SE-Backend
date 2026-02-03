@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { User } from '../models/User';
+import User from '../models/User';
 
 export const getAllUsers = async (
   req: Request,
@@ -7,7 +7,7 @@ export const getAllUsers = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const users = await User.find().select('-password');
+    const users = await User.find();
     res.status(200).json({
       success: true,
       count: users.length,
@@ -24,7 +24,7 @@ export const getUserById = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const user = await User.findOne({ id: req.params.id });
     
     if (!user) {
       res.status(404).json({
@@ -49,32 +49,27 @@ export const createUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { name, email, password, role, phone, language } = req.body;
+    const { name, mobile_number, role, recovery_email } = req.body;
     
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ mobile_number });
     if (existingUser) {
       res.status(400).json({
         success: false,
-        message: 'User with this email already exists'
+        message: 'User with this mobile number already exists'
       });
       return;
     }
     
     const user = await User.create({
       name,
-      email,
-      password,
+      mobile_number,
       role,
-      phone,
-      language
+      recovery_email
     });
-    
-    const userResponse = user.toObject() as any;
-    delete userResponse.password;
     
     res.status(201).json({
       success: true,
-      data: userResponse
+      data: user
     });
   } catch (error) {
     next(error);
@@ -87,13 +82,19 @@ export const updateUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { name, email, phone, language, role } = req.body;
+    const { name, mobile_number, recovery_email, role } = req.body;
     
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { name, email, phone, language, role },
+    const updateData: any = {};
+    if (name) updateData.name = name;
+    if (mobile_number) updateData.mobile_number = mobile_number;
+    if (recovery_email) updateData.recovery_email = recovery_email;
+    if (role) updateData.role = role;
+    
+    const user = await User.findOneAndUpdate(
+      { id: req.params.id },
+      updateData,
       { new: true, runValidators: true }
-    ).select('-password');
+    );
     
     if (!user) {
       res.status(404).json({
@@ -118,7 +119,11 @@ export const deactivateUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+    const user = await User.findOneAndUpdate(
+      { id: req.params.id },
+      { is_active: false },
+      { new: true }
+    );
     
     if (!user) {
       res.status(404).json({
@@ -143,7 +148,11 @@ export const activateUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
+    const user = await User.findOneAndUpdate(
+      { id: req.params.id },
+      { is_active: true },
+      { new: true }
+    );
 
     if (!user) {
       res.status(404).json({

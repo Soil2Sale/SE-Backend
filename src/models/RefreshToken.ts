@@ -1,35 +1,88 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 
 export interface IRefreshToken extends Document {
-  userId: mongoose.Types.ObjectId;
-  token: string;
-  expiresAt: Date;
-  createdAt: Date;
+  id: string;
+  user_id: string;
+  token_hash: string;
+  expires_at: Date;
+  created_at: Date;
+  revoked_at?: Date;
+}
+
+interface IRefreshTokenModel extends Model<IRefreshToken> {
+  verifyToken(plainToken: string): Promise<IRefreshToken | null>;
 }
 
 const refreshTokenSchema = new Schema<IRefreshToken>(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
+    id: {
+      type: String,
+      default: () => uuidv4(),
+      unique: true,
       required: true
     },
-    token: {
+    user_id: {
+      type: String,
+      required: true,
+      ref: 'User'
+    },
+    token_hash: {
       type: String,
       required: true,
       unique: true
     },
-    expiresAt: {
+    expires_at: {
       type: Date,
       required: true
+    },
+    created_at: {
+      type: Date,
+      default: Date.now,
+      required: true
+    },
+    revoked_at: {
+      type: Date
     }
   },
   {
-    timestamps: true
+    timestamps: false,
+    versionKey: false
   }
 );
 
-refreshTokenSchema.index({ userId: 1 });
-refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+refreshTokenSchema.pre('save', function(next) {
+  if (!this.token_hash && (this as any).token) {
+    const plainToken = (this as any).token;
+    this.token_hash = crypto
+      .createHash('sha256')
+      .update(plainToken)
+      .digest('hex');
+    
+    delete (this as any).token;
+  }
+  next();
+});
 
-export const RefreshToken = mongoose.model<IRefreshToken>('RefreshToken', refreshTokenSchema);
+refreshTokenSchema.index({ user_id: 1 });
+refreshTokenSchema.index({ token_hash: 1 });
+refreshTokenSchema.index({ id: 1 });
+refreshTokenSchema.index({ expires_at: 1 }, { expireAfterSeconds: 0 });
+
+refreshTokenSchema.statics.verifyToken = async function(plainToken: string) {
+  const tokenHash = crypto
+    .createHash('sha256')
+    .update(plainToken)
+    .digest('hex');
+  
+  return await this.findOne({ 
+    token_hash: tokenHash,
+    revoked_at: null,
+    expires_at: { $gt: new Date() }
+  });
+};
+
+const RefreshToken = mongoose.model<IRefreshToken, IRefreshTokenModel>('RefreshToken', refreshTokenSchema);
+
+export default RefreshToken;

@@ -1,25 +1,25 @@
 import { Request, Response, NextFunction } from "express";
-import { User } from "../models/User";
-import { RefreshToken } from "../models/RefreshToken";
+import User from "../models/User";
+import RefreshToken from "../models/RefreshToken";
 import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
   getRefreshTokenExpiry,
-  generateResetPasswordToken,
-  verifyResetPasswordToken
 } from "../utils/jwt";
-import { sendResetPasswordEmail } from "../middlewares/mail/mailer";
+import { sendResetPasswordEmail, sendOTPEmail } from "../middlewares/mail/mailer";
+import { generateOTP, validateOTP } from "../middlewares/otp/otpService";
+import { sendOTPViaSMS } from "../middlewares/otp/otpSender";
 
 const setRefreshTokenCookie = (res: Response, token: string): void => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  res.cookie('refreshToken', token, {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  res.cookie("refreshToken", token, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
+    sameSite: isProduction ? "strict" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: '/'
+    path: "/",
   });
 };
 
@@ -29,46 +29,33 @@ export const register = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { name, email, password, phone, language } = req.body;
+    const { name, mobile_number, role, recovery_email } = req.body;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ mobile_number });
     if (existingUser) {
       res.status(400).json({
         success: false,
-        message: "User with this email already exists",
+        message: "User with this mobile number already exists",
       });
       return;
     }
 
     const user = await User.create({
       name,
-      email,
-      password,
-      phone,
-      language: language || 'en'
+      mobile_number,
+      role,
+      recovery_email,
     });
-
-    const accessToken = generateAccessToken(user._id, user.email, user.role);
-    const refreshToken = generateRefreshToken(user._id, user.email, user.role);
-
-    await RefreshToken.create({
-      userId: user._id,
-      token: refreshToken,
-      expiresAt: getRefreshTokenExpiry()
-    });
-
-    setRefreshTokenCookie(res, refreshToken);
 
     const userResponse = user.toObject() as any;
-    delete userResponse.password;
+    delete userResponse.otp_secret;
 
     res.status(201).json({
       success: true,
       message: "User registered successfully",
       data: {
         user: userResponse,
-        accessToken
-      }
+      },
     });
   } catch (error) {
     next(error);
@@ -81,60 +68,111 @@ export const login = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { identifier } = req.body;
 
-    const user = await User.findOne({ email });
+    const isEmail = /^\S+@\S+\.\S+$/.test(identifier);
+    const isMobile = /^[6-9]\d{9}$/.test(identifier);
+
+    if (!isEmail && !isMobile) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid email or mobile number format",
+      });
+      return;
+    }
+
+    const query = isEmail ? { recovery_email: identifier } : { mobile_number: identifier };
+    const user = await User.findOne(query);
+
     if (!user) {
-      res.status(401).json({
+      res.status(404).json({
         success: false,
-        message: "Invalid credentials",
+        message: "User not found",
       });
       return;
     }
 
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      res.status(401).json({
+    const otp = generateOTP(user.otp_secret);
+
+    if (isEmail) {
+      await sendOTPEmail(identifier, otp);
+    } else {
+      await sendOTPViaSMS(identifier, otp);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `OTP sent successfully to your ${isEmail ? 'email' : 'mobile number'}`,
+      data: {
+        userId: user.id,
+        method: isEmail ? 'email' : 'sms',
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyOtp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { userId, otp } = req.body;
+
+    if (!userId || !otp) {
+      res.status(400).json({
         success: false,
-        message: "Invalid credentials",
+        message: "User ID and OTP are required",
       });
       return;
     }
 
-    if (!user.isActive) {
+    const user = await User.findOne({ id: userId });
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    const isValid = validateOTP(otp, user.otp_secret, 5);
+    if (!isValid) {
       res.status(401).json({
         success: false,
-        message: "User account is inactive",
+        message: "Invalid or expired OTP",
       });
       return;
     }
 
     const oldRefreshToken = req.cookies?.refreshToken;
     if (oldRefreshToken) {
-      await RefreshToken.deleteOne({ token: oldRefreshToken });
+      await RefreshToken.deleteMany({ user_id: user.id, revoked_at: null });
     }
 
-    const accessToken = generateAccessToken(user._id, user.email, user.role);
-    const refreshToken = generateRefreshToken(user._id, user.email, user.role);
-    
+    const accessToken = generateAccessToken(user.id, user.mobile_number, user.role);
+    const refreshToken = generateRefreshToken(user.id, user.mobile_number, user.role);
+
     await RefreshToken.create({
-      userId: user._id,
+      user_id: user.id,
       token: refreshToken,
-      expiresAt: getRefreshTokenExpiry()
+      expires_at: getRefreshTokenExpiry(),
     });
 
     setRefreshTokenCookie(res, refreshToken);
 
     const userResponse = user.toObject() as any;
-    delete userResponse.password;
+    delete userResponse.otp_secret;
 
     res.status(200).json({
       success: true,
       message: "Login successful",
       data: {
         user: userResponse,
-        accessToken
-      }
+        accessToken,
+      },
     });
   } catch (error) {
     next(error);
@@ -168,7 +206,7 @@ export const refreshAccessToken = async (
       return;
     }
 
-    const storedToken = await RefreshToken.findOne({ token: refreshToken });
+    const storedToken = await RefreshToken.verifyToken(refreshToken);
     if (!storedToken) {
       res.status(401).json({
         success: false,
@@ -177,24 +215,27 @@ export const refreshAccessToken = async (
       return;
     }
 
-    const user = await User.findById(decoded.userId);
-    if (!user || !user.isActive) {
-      await RefreshToken.deleteOne({ token: refreshToken });
+    const user = await User.findOne({ id: decoded.userId });
+    if (!user) {
+      await RefreshToken.updateOne(
+        { id: storedToken.id },
+        { revoked_at: new Date() }
+      );
       res.status(401).json({
         success: false,
-        message: "User not found or inactive",
+        message: "User not found",
       });
       return;
     }
 
-    const newAccessToken = generateAccessToken(user._id, user.email, user.role);
+    const newAccessToken = generateAccessToken(user.id, user.mobile_number, user.role);
 
     res.status(200).json({
       success: true,
       message: "Access token refreshed successfully",
       data: {
-        accessToken: newAccessToken
-      }
+        accessToken: newAccessToken,
+      },
     });
   } catch (error) {
     next(error);
@@ -210,14 +251,20 @@ export const logout = async (
     const refreshToken = req.cookies?.refreshToken;
 
     if (refreshToken) {
-      await RefreshToken.deleteOne({ token: refreshToken });
+      const storedToken = await RefreshToken.verifyToken(refreshToken);
+      if (storedToken) {
+        await RefreshToken.updateOne(
+          { id: storedToken.id },
+          { revoked_at: new Date() }
+        );
+      }
     }
 
-    res.clearCookie('refreshToken', {
+    res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-      path: '/'
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      path: "/",
     });
 
     res.status(200).json({
@@ -235,9 +282,22 @@ export const forgotPassword = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { email } = req.body;
+    const { identifier } = req.body;
 
-    const user = await User.findOne({ email });
+    const isEmail = /^\S+@\S+\.\S+$/.test(identifier);
+    const isMobile = /^[6-9]\d{9}$/.test(identifier);
+
+    if (!isEmail && !isMobile) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid email or mobile number format",
+      });
+      return;
+    }
+
+    const query = isEmail ? { recovery_email: identifier } : { mobile_number: identifier };
+    const user = await User.findOne(query);
+
     if (!user) {
       res.status(404).json({
         success: false,
@@ -246,68 +306,23 @@ export const forgotPassword = async (
       return;
     }
 
-    const resetToken = generateResetPasswordToken(user._id, user.email);
+    const otp = generateOTP(user.otp_secret);
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
-    const resetLink = `${clientUrl}/auth/reset-password?token=${resetToken}`;
-
-    await sendResetPasswordEmail(user.email, resetLink);
+    if (isEmail) {
+      const clientUrl = process.env.CLIENT_URL;
+      const resetLink = `${clientUrl}/auth/reset-password?userId=${user.id}`;
+      await sendResetPasswordEmail(identifier, resetLink);
+    } else {
+      await sendOTPViaSMS(identifier, otp);
+    }
 
     res.status(200).json({
       success: true,
-      message: "Password reset email sent successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const resetPassword = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> => {
-  try {
-    const { token, password } = req.body;
-
-    if (!token || !password) {
-      res.status(400).json({
-        success: false,
-        message: "Token and password are required",
-      });
-      return;
-    }
-
-    let decoded;
-    try {
-      decoded = verifyResetPasswordToken(token);
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid or expired reset token",
-      });
-      return;
-    }
-
-    const user = await User.findOne({
-      _id: decoded.userId,
-      email: decoded.email
-    });
-
-    if (!user) {
-      res.status(400).json({
-        success: false,
-        message: "User not found",
-      });
-      return;
-    }
-
-    user.password = password;
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Password reset successfully",
+      message: `Reset instructions sent to your ${isEmail ? 'email' : 'mobile number'}`,
+      data: {
+        userId: user.id,
+        method: isEmail ? 'email' : 'sms',
+      },
     });
   } catch (error) {
     next(error);

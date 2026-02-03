@@ -1,88 +1,114 @@
-import mongoose, { Document, Schema } from "mongoose";
-import bcrypt from "bcryptjs";
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export enum UserRole {
+  FARMER = 'Farmer',
+  BUYER = 'Buyer',
+  COOPERATIVE = 'Cooperative',
+  LOGISTICS_PROVIDER = 'Logistics Provider',
+  FINANCIAL_PARTNER = 'Financial Partner',
+  ADMIN = 'Admin'
+}
 
 export interface IUser extends Document {
+  id: string;
+  created_at: Date;
   name: string;
-  email: string;
-  phone: string;
-  language: string;
-  password: string;
-  role: "user" | "driver" | "admin";
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  comparePassword(candidatePassword: string): Promise<boolean>;
+  mobile_number: string;
+  otp_secret: string;
+  role: UserRole;
+  aadhaar_verified: boolean;
+  business_verified: boolean;
+  recovery_email?: string;
 }
 
 const userSchema = new Schema<IUser>(
   {
+    id: {
+      type: String,
+      default: () => uuidv4(),
+      unique: true,
+      required: true
+    },
+    created_at: {
+      type: Date,
+      default: Date.now,
+      required: true
+    },
     name: {
       type: String,
-      required: [true, "Name is required"],
-      trim: true,
-      minlength: [2, "Name must be at least 2 characters long"],
-      maxlength: [50, "Name cannot exceed 50 characters"],
+      required: [true, 'Name is required'],
+      trim: true
     },
-    email: {
+    mobile_number: {
       type: String,
-      required: [true, "Email is required"],
+      required: [true, 'Mobile number is required'],
       unique: true,
-      lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
+      match: [/^[6-9]\d{9}$/, 'Please provide a valid Indian mobile number']
     },
-    phone: {
+    otp_secret: {
       type: String,
-      required: [true, "Phone number is required"],
-      trim: true,
-      match: [/^\+?[1-9]\d{1,14}$/, "Please provide a valid phone number"],
-    },
-    language: {
-      type: String,
-      required: [true, "Language is required"],
-      trim: true,
-      default: "en",
-      minlength: [2, "Language must be at least 2 characters long"],
-    },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters long"],
+      required: true,
+      default: () => {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+      }
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      enum: Object.values(UserRole),
+      required: [true, 'User role is required']
     },
-    isActive: {
+    aadhaar_verified: {
       type: Boolean,
-      default: true,
+      default: false,
+      required: true
     },
+    business_verified: {
+      type: Boolean,
+      default: false,
+      required: true
+    },
+    recovery_email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address']
+    }
   },
   {
-    timestamps: true,
-  },
+    timestamps: false,
+    versionKey: false
+  }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
+userSchema.index({ mobile_number: 1 });
+userSchema.index({ id: 1 });
+userSchema.index({ role: 1 });
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error: any) {
-    next(error);
+userSchema.virtual('_id').get(function() {
+  return this.id;
+});
+
+userSchema.post('save', async function(doc) {
+  if (this.isNew) {
+    const UserConsent = mongoose.model('UserConsent');
+    const consentTypes = ['data_sharing', 'finance', 'analytics', 'notifications'];
+    
+    const consents = consentTypes.map(type => ({
+      user_id: doc.id,
+      consent_type: type,
+      granted_at: new Date()
+    }));
+
+    try {
+      await UserConsent.insertMany(consents);
+    } catch (error) {
+      console.error('Error creating user consents:', error);
+    }
   }
 });
 
-// Method to compare passwords
-userSchema.methods.comparePassword = async function (
-  candidatePassword: string,
-): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
-};
+const User = mongoose.model<IUser>('User', userSchema);
 
-export const User = mongoose.model<IUser>("User", userSchema);
+export default User;

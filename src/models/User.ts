@@ -20,6 +20,8 @@ export interface IUser extends Document {
   aadhaar_verified: boolean;
   business_verified: boolean;
   recovery_email?: string;
+  telegram_chat_id?: string;
+  is_telegram_linked: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -73,7 +75,18 @@ const userSchema = new Schema<IUser>(
       type: String,
       trim: true,
       lowercase: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address']
+      match: [
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        'Please provide a valid email address'
+      ]
+    },
+    telegram_chat_id: {
+      type: String
+    },
+    is_telegram_linked: {
+      type: Boolean,
+      default: false,
+      required: true
     }
   },
   {

@@ -78,7 +78,6 @@ const cropListingSchema = new Schema<ICropListing>(
 );
 
 cropListingSchema.index({ farmer_profile_id: 1 });
-cropListingSchema.index({ id: 1 });
 cropListingSchema.index({ status: 1 });
 cropListingSchema.index({ crop_name: 1 });
 cropListingSchema.index({ quality_grade: 1 });

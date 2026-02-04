@@ -82,13 +82,7 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-userSchema.index({ mobile_number: 1 });
-userSchema.index({ id: 1 });
 userSchema.index({ role: 1 });
-
-userSchema.virtual('_id').get(function() {
-  return this.id;
-});
 
 userSchema.post('save', async function(doc) {
   if (this.isNew) {

@@ -45,7 +45,6 @@ const farmerCropSchema = new Schema<IFarmerCrop>(
 );
 
 farmerCropSchema.index({ farmer_profile_id: 1 });
-farmerCropSchema.index({ id: 1 });
 farmerCropSchema.index({ crop_name: 1 });
 farmerCropSchema.index({ farmer_profile_id: 1, crop_name: 1 });
 

@@ -59,8 +59,6 @@ const farmerProfileSchema = new Schema<IFarmerProfile>(
   }
 );
 
-farmerProfileSchema.index({ user_id: 1 });
-farmerProfileSchema.index({ id: 1 });
 farmerProfileSchema.index({ location_latitude: 1, location_longitude: 1 });
 
 const FarmerProfile = mongoose.model<IFarmerProfile>('FarmerProfile', farmerProfileSchema);

@@ -1,24 +1,27 @@
-export const sendOTPViaSMS = async (
-  mobileNumber: string,
-  otp: string,
-): Promise<void> => {
-  console.log(`[SMS Placeholder] Sending OTP ${otp} to ${mobileNumber}`);
-  // TODO: Integrate SMS service (Twilio, AWS SNS, MSG91, etc.)
-  // Example for future implementation:
-  // const smsClient = new SmsService();
-  // await smsClient.send({
-  //   to: mobileNumber,
-  //   message: `Your AgriConnect OTP is: ${otp}. Valid for 5 minutes.`
-  // });
-};
+import axios, { AxiosError } from "axios";
 
-export const sendOTPViaIVR = async (
-  mobileNumber: string,
-  otp: string,
+interface TelegramResponse {
+  ok: boolean;
+  result?: unknown;
+  description?: string;
+}
+
+export const sendOTPViaTelegram = async (
+  chatId: string,
+  otp: string
 ): Promise<void> => {
-  console.log(
-    `[IVR Placeholder] Sending OTP ${otp} to ${mobileNumber} via voice call`,
-  );
-  // TODO: Integrate IVR service for voice OTP delivery
-  // Useful for farmers in rural areas with low literacy
+  try {
+    await axios.post<TelegramResponse>(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        chat_id: chatId,
+        text: `Your OTP is: ${otp}\n\nThis code will expire in 5 minutes.`,
+        parse_mode: "Markdown"
+      }
+    );
+  } catch (error) {
+    const axiosError = error as AxiosError<TelegramResponse>;
+    console.error("Telegram OTP error:", axiosError?.response?.data);
+    throw new Error(axiosError?.response?.data?.description || "Failed to send OTP via Telegram");
+  }
 };

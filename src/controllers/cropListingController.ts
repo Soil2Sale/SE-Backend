@@ -2,7 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import CropListing, {
   CropListingStatus,
   QualityGrade,
+  ICropListing,
 } from "../models/CropListing";
+import { FilterQuery } from "mongoose";
 
 export const getAllCropListings = async (
   req: Request,
@@ -26,11 +28,13 @@ export const getAllCropListings = async (
       sort_order = "desc",
     } = req.query;
 
-    const filter: any = {};
-    if (status) filter.status = status;
-    if (crop_name) filter.crop_name = { $regex: crop_name, $options: "i" };
-    if (quality_grade) filter.quality_grade = quality_grade;
-    if (farmer_profile_id) filter.farmer_profile_id = farmer_profile_id;
+    const filter: FilterQuery<ICropListing> = {};
+    if (status) filter.status = status as CropListingStatus;
+    if (crop_name)
+      filter.crop_name = { $regex: crop_name as string, $options: "i" };
+    if (quality_grade) filter.quality_grade = quality_grade as QualityGrade;
+    if (farmer_profile_id)
+      filter.farmer_profile_id = farmer_profile_id as string;
 
     if (min_quantity || max_quantity) {
       filter.quantity = {};
@@ -45,14 +49,14 @@ export const getAllCropListings = async (
     }
 
     if (search) {
-      filter.crop_name = { $regex: search, $options: "i" };
+      filter.crop_name = { $regex: search as string, $options: "i" };
     }
 
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(100, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
 
-    const sortObj: any = {};
+    const sortObj: Record<string, 1 | -1> = {};
     sortObj[sort_by as string] = sort_order === "asc" ? 1 : -1;
 
     const [cropListings, total] = await Promise.all([
@@ -190,7 +194,7 @@ export const updateCropListing = async (
     const { crop_name, quality_grade, quantity, expected_price, status } =
       req.body;
 
-    const updateData: any = {};
+    const updateData: Partial<ICropListing> = {};
     if (crop_name) updateData.crop_name = crop_name;
     if (quality_grade) updateData.quality_grade = quality_grade;
     if (quantity !== undefined) updateData.quantity = quantity;

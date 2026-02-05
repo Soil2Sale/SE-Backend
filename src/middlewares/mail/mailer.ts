@@ -1,36 +1,47 @@
-import nodemailer from "nodemailer";
+import axios from "axios";
 import { resetPasswordTemplate } from "./templates/resetPasswordTemplate";
 import { otpEmailTemplate } from "./templates/otpTemplate";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.BREVO_SMTP_USER,
-    pass: process.env.BREVO_SMTP_PASS,
-  },
-} as any);
+const apiKey = process.env.BREVO_API_KEY;
+const senderEmail = process.env.DEFAULT_FROM_EMAIL;
+const senderName = process.env.EMAIL_FROM_NAME || "AgriConnect";
+
+if (!apiKey) {
+    throw new Error("BREVO_API_KEY not configured");
+}
+if (!senderEmail) {
+    throw new Error("DEFAULT_FROM_EMAIL not configured");
+}
 
 export const sendResetPasswordEmail = async (
   to: string,
   resetLink: string,
 ): Promise<void> => {
-  const mailOptions = {
-    from: process.env.DEFAULT_FROM_EMAIL,
-    to,
-    subject: "Password Reset Request",
-    html: resetPasswordTemplate(resetLink),
+  const payload = {
+      sender: { email: senderEmail, name: senderName },
+      to: [{ email: to }],
+      subject: "Password Reset Request",
+      html: resetPasswordTemplate(resetLink),
   };
-  await transporter.sendMail(mailOptions);
+
+  const res = await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
+      headers: { "api-key": apiKey, "Content-Type": "application/json" },
+      timeout: 15000,
+  });
 };
 
 export const sendOTPEmail = async (to: string, otp: string): Promise<void> => {
-  const mailOptions = {
-    from: process.env.DEFAULT_FROM_EMAIL,
-    to,
-    subject: "Your AgriConnect OTP",
-    html: otpEmailTemplate(otp),
+  const payload = {
+      sender: { email: senderEmail, name: senderName },
+      to: [{ email: to }],
+      subject: "Your AgriConnect OTP",
+      htmlContent: otpEmailTemplate(otp),
   };
-  await transporter.sendMail(mailOptions);
+
+  const res = await axios.post("https://api.brevo.com/v3/smtp/email", payload, {
+      headers: { "api-key": apiKey, "Content-Type": "application/json" },
+      timeout: 15000,
+  });
+
+  console.log("OTP email sent:", res);
 };

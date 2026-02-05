@@ -68,25 +68,3 @@ export const getRefreshTokenExpiry = (): Date => {
       throw new Error('Invalid time unit');
   }
 };
-
-export const generateResetPasswordToken = (userId: Types.ObjectId, email: string): string => {
-  const payload = {
-    userId: userId.toString(),
-    email,
-    type: 'reset-password'
-  };
-
-  const options: jwt.SignOptions = {
-    expiresIn: (process.env.JWT_RESET_PASSWORD_EXPIRY || '30m') as jwt.SignOptions['expiresIn']
-  };
-
-  return jwt.sign(payload, process.env.JWT_RESET_PASSWORD_SECRET!, options);
-};
-
-export const verifyResetPasswordToken = (token: string): { userId: string; email: string } => {
-  const decoded = jwt.verify(token, process.env.JWT_RESET_PASSWORD_SECRET!) as any;
-  return {
-    userId: decoded.userId,
-    email: decoded.email
-  };
-};

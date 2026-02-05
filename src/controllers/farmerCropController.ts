@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import FarmerCrop from "../models/FarmerCrop";
+import FarmerCrop, { IFarmerCrop } from "../models/FarmerCrop";
+import { FilterQuery } from "mongoose";
 
 export const getAllFarmerCrops = async (
   req: Request,
@@ -18,15 +19,17 @@ export const getAllFarmerCrops = async (
       sort_order = "desc",
     } = req.query;
 
-    const filter: any = {};
-    if (farmer_profile_id) filter.farmer_profile_id = farmer_profile_id;
-    if (crop_name) filter.crop_name = { $regex: crop_name, $options: "i" };
+    const filter: FilterQuery<IFarmerCrop> = {};
+    if (farmer_profile_id)
+      filter.farmer_profile_id = farmer_profile_id as string;
+    if (crop_name)
+      filter.crop_name = { $regex: crop_name as string, $options: "i" };
     if (seasonality)
-      filter.seasonality = { $regex: seasonality, $options: "i" };
+      filter.seasonality = { $regex: seasonality as string, $options: "i" };
     if (search) {
       filter.$or = [
-        { crop_name: { $regex: search, $options: "i" } },
-        { seasonality: { $regex: search, $options: "i" } },
+        { crop_name: { $regex: search as string, $options: "i" } },
+        { seasonality: { $regex: search as string, $options: "i" } },
       ];
     }
 
@@ -34,7 +37,7 @@ export const getAllFarmerCrops = async (
     const limitNum = Math.min(100, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
 
-    const sortObj: any = {};
+    const sortObj: Record<string, 1 | -1> = {};
     sortObj[sort_by as string] = sort_order === "asc" ? 1 : -1;
 
     const [farmerCrops, total] = await Promise.all([
@@ -157,7 +160,7 @@ export const updateFarmerCrop = async (
   try {
     const { crop_name, seasonality } = req.body;
 
-    const updateData: any = {};
+    const updateData: Partial<IFarmerCrop> = {};
     if (crop_name) updateData.crop_name = crop_name;
     if (seasonality) updateData.seasonality = seasonality;
 

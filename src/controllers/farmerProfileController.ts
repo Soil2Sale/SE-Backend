@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import FarmerProfile from "../models/FarmerProfile";
+import FarmerProfile, { IFarmerProfile } from "../models/FarmerProfile";
+import { FilterQuery } from "mongoose";
 
 export const getAllFarmerProfiles = async (
   req: Request,
@@ -18,8 +19,8 @@ export const getAllFarmerProfiles = async (
       sort_order = "desc",
     } = req.query;
 
-    const filter: any = {};
-    if (user_id) filter.user_id = user_id;
+    const filter: FilterQuery<IFarmerProfile> = {};
+    if (user_id) filter.user_id = user_id as string;
     if (min_land_size || max_land_size) {
       filter.land_size = {};
       if (min_land_size) filter.land_size.$gte = Number(min_land_size);
@@ -33,7 +34,7 @@ export const getAllFarmerProfiles = async (
     const limitNum = Math.min(100, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
 
-    const sortObj: any = {};
+    const sortObj: Record<string, 1 | -1> = {};
     sortObj[sort_by as string] = sort_order === "asc" ? 1 : -1;
 
     const [farmerProfiles, total] = await Promise.all([
@@ -165,7 +166,7 @@ export const updateFarmerProfile = async (
       manual_location_correction,
     } = req.body;
 
-    const updateData: any = {};
+    const updateData: Partial<IFarmerProfile> = {};
     if (land_size !== undefined) updateData.land_size = land_size;
     if (location_latitude !== undefined)
       updateData.location_latitude = location_latitude;

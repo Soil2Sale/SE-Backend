@@ -7,9 +7,9 @@ import {
   verifyRefreshToken,
   getRefreshTokenExpiry,
 } from "../utils/jwt";
-import { sendResetPasswordEmail, sendOTPEmail } from "../middlewares/mail/mailer";
+import { sendOTPEmail } from "../middlewares/mail/mailer";
 import { generateOTP, validateOTP } from "../middlewares/otp/otpService";
-import { sendOTPViaSMS } from "../middlewares/otp/otpSender";
+import { sendOTPViaTelegram } from "../middlewares/otp/otpSender";
 
 const setRefreshTokenCookie = (res: Response, token: string): void => {
   const isProduction = process.env.NODE_ENV === "production";
@@ -31,11 +31,22 @@ export const register = async (
   try {
     const { name, mobile_number, role, recovery_email } = req.body;
 
-    const existingUser = await User.findOne({ mobile_number });
+    if (!name || !mobile_number || !role) {
+      res.status(400).json({
+        success: false,
+        message: "Name, phone, email, and role are required"
+      });
+      return;
+    }
+
+    const existingUser = await User.findOne({
+      $or: [{ mobile_number }, { recovery_email }]
+    });
+    
     if (existingUser) {
       res.status(400).json({
         success: false,
-        message: "User with this mobile number already exists",
+        message: "User with this phone or email already exists"
       });
       return;
     }
@@ -52,10 +63,11 @@ export const register = async (
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "User registered successfully. Please link your Telegram.",
       data: {
         user: userResponse,
-      },
+        telegram_bot_link: `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${user.id}`
+      }
     });
   } catch (error) {
     next(error);
@@ -81,7 +93,9 @@ export const login = async (
       return;
     }
 
-    const query = isEmail ? { recovery_email: identifier } : { mobile_number: identifier };
+    const query = isEmail
+      ? { recovery_email: identifier }
+      : { mobile_number: identifier };
     const user = await User.findOne(query);
 
     if (!user) {
@@ -92,20 +106,44 @@ export const login = async (
       return;
     }
 
+    if (!user.is_telegram_linked) {
+      res.status(400).json({
+        success: false,
+        message: "Telegram not linked. Please link your Telegram first.",
+        code: "TELEGRAM_NOT_LINKED",
+        data: {
+          telegram_bot_link: `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${user.id}`
+        }
+      });
+      return;
+    }
+
     const otp = generateOTP(user.otp_secret);
 
-    if (isEmail) {
-      await sendOTPEmail(identifier, otp);
-    } else {
-      await sendOTPViaSMS(identifier, otp);
+    try {
+      if (isEmail) {
+        await sendOTPEmail(identifier, otp);
+      } else {
+        await sendOTPViaTelegram(user.telegram_chat_id!, otp);
+      }
+    } catch (otpError) {
+      const errorMessage = otpError instanceof Error ? otpError.message : "Failed to send OTP";
+      console.error("OTP error:", otpError);
+      
+      res.status(500).json({
+        success: false,
+        message: errorMessage,
+        error: process.env.NODE_ENV === "development" ? errorMessage : undefined
+      });
+      return;
     }
 
     res.status(200).json({
       success: true,
-      message: `OTP sent successfully to your ${isEmail ? 'email' : 'mobile number'}`,
+      message: `OTP sent successfully to your ${isEmail ? "email" : "mobile number"}`,
       data: {
         userId: user.id,
-        method: isEmail ? 'email' : 'sms',
+        method: isEmail ? "email" : "telegram",
       },
     });
   } catch (error) {
@@ -138,7 +176,7 @@ export const verifyOtp = async (
       return;
     }
 
-    const isValid = validateOTP(otp, user.otp_secret, 5);
+    const isValid = validateOTP(otp, user.otp_secret);
     if (!isValid) {
       res.status(401).json({
         success: false,
@@ -152,19 +190,27 @@ export const verifyOtp = async (
       await RefreshToken.deleteMany({ user_id: user.id, revoked_at: null });
     }
 
-    const accessToken = generateAccessToken(user.id, user.mobile_number, user.role);
-    const refreshToken = generateRefreshToken(user.id, user.mobile_number, user.role);
+    const accessToken = generateAccessToken(
+      user.id,
+      user.mobile_number,
+      user.role,
+    );
+    const refreshToken = generateRefreshToken(
+      user.id,
+      user.mobile_number,
+      user.role,
+    );
 
     await RefreshToken.create({
       user_id: user.id,
-      token: refreshToken,
+      token_hash: refreshToken,
       expires_at: getRefreshTokenExpiry(),
     });
 
     setRefreshTokenCookie(res, refreshToken);
 
-    const userResponse = user.toObject() as any;
-    delete userResponse.otp_secret;
+      const userResponse = user.toObject() as any;
+      delete userResponse.otp_secret;
 
     res.status(200).json({
       success: true,
@@ -185,6 +231,7 @@ export const refreshAccessToken = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
+    console.log(req.cookies);
     const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
@@ -219,16 +266,21 @@ export const refreshAccessToken = async (
     if (!user) {
       await RefreshToken.updateOne(
         { id: storedToken.id },
-        { revoked_at: new Date() }
+        { revoked_at: new Date() },
       );
       res.status(401).json({
+
         success: false,
         message: "User not found",
       });
       return;
     }
 
-    const newAccessToken = generateAccessToken(user.id, user.mobile_number, user.role);
+    const newAccessToken = generateAccessToken(
+      user.id,
+      user.mobile_number,
+      user.role,
+    );
 
     res.status(200).json({
       success: true,
@@ -255,7 +307,7 @@ export const logout = async (
       if (storedToken) {
         await RefreshToken.updateOne(
           { id: storedToken.id },
-          { revoked_at: new Date() }
+          { revoked_at: new Date() },
         );
       }
     }
@@ -270,59 +322,6 @@ export const logout = async (
     res.status(200).json({
       success: true,
       message: "Logout successful",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const forgotPassword = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> => {
-  try {
-    const { identifier } = req.body;
-
-    const isEmail = /^\S+@\S+\.\S+$/.test(identifier);
-    const isMobile = /^[6-9]\d{9}$/.test(identifier);
-
-    if (!isEmail && !isMobile) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid email or mobile number format",
-      });
-      return;
-    }
-
-    const query = isEmail ? { recovery_email: identifier } : { mobile_number: identifier };
-    const user = await User.findOne(query);
-
-    if (!user) {
-      res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-      return;
-    }
-
-    const otp = generateOTP(user.otp_secret);
-
-    if (isEmail) {
-      const clientUrl = process.env.CLIENT_URL;
-      const resetLink = `${clientUrl}/auth/reset-password?userId=${user.id}`;
-      await sendResetPasswordEmail(identifier, resetLink);
-    } else {
-      await sendOTPViaSMS(identifier, otp);
-    }
-
-    res.status(200).json({
-      success: true,
-      message: `Reset instructions sent to your ${isEmail ? 'email' : 'mobile number'}`,
-      data: {
-        userId: user.id,
-        method: isEmail ? 'email' : 'sms',
-      },
     });
   } catch (error) {
     next(error);

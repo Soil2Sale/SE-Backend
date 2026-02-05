@@ -5,7 +5,8 @@ const token = process.env.TELEGRAM_BOT_TOKEN || "8124214977:AAF2GBygCFB_nGw6sste
 console.log("Telegram Bot Token:", token); // Debugging line
 const bot = new TelegramBot(token, { polling: true });
 
-bot.onText(/\/start (.+)/, async (msg, match) => {
+
+bot.onText(/\/start (.+)/, async (msg: TelegramBot.Message, match: RegExpExecArray | null) => {
   const chatId = msg.chat.id;
   const userId = match?.[1];
 
@@ -36,9 +37,9 @@ bot.onText(/\/start (.+)/, async (msg, match) => {
   }
 });
 
-bot.on("message", (msg) => {
+bot.on("message", (msg: TelegramBot.Message) => {
   const chatId = msg.chat.id;
-  
+
   if (!msg.text?.startsWith("/start")) {
     bot.sendMessage(
       chatId,

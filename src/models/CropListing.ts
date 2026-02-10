@@ -19,6 +19,7 @@ export interface ICropListing extends Document {
   id: string;
   created_at: Date;
   farmer_profile_id: string;
+  farmer_user_id: string;
   crop_name: string;
   quality_grade: QualityGrade;
   quantity: number;
@@ -43,6 +44,11 @@ const cropListingSchema = new Schema<ICropListing>(
       type: String,
       required: true,
       ref: "FarmerProfile",
+    },
+    farmer_user_id: {
+      type: String,
+      required: true,
+      ref: "User",
     },
     crop_name: {
       type: String,
@@ -78,11 +84,13 @@ const cropListingSchema = new Schema<ICropListing>(
 );
 
 cropListingSchema.index({ farmer_profile_id: 1 });
+cropListingSchema.index({ farmer_user_id: 1 });
 cropListingSchema.index({ status: 1 });
 cropListingSchema.index({ crop_name: 1 });
 cropListingSchema.index({ quality_grade: 1 });
 cropListingSchema.index({ status: 1, crop_name: 1 });
 cropListingSchema.index({ created_at: -1 });
+cropListingSchema.index({ farmer_user_id: 1, status: 1 });
 
 const CropListing = mongoose.model<ICropListing>(
   "CropListing",

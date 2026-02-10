@@ -50,7 +50,6 @@ const advisoryContentSchema = new Schema<IAdvisoryContent>(
   },
 );
 
-advisoryContentSchema.index({ id: 1 });
 advisoryContentSchema.index({ language_code: 1 });
 advisoryContentSchema.index({ created_at: -1 });
 

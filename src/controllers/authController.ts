@@ -34,19 +34,19 @@ export const register = async (
     if (!name || !mobile_number || !role) {
       res.status(400).json({
         success: false,
-        message: "Name, phone, email, and role are required"
+        message: "Name, phone, email, and role are required",
       });
       return;
     }
 
     const existingUser = await User.findOne({
-      $or: [{ mobile_number }, { recovery_email }]
+      $or: [{ mobile_number }, { recovery_email }],
     });
-    
+
     if (existingUser) {
       res.status(400).json({
         success: false,
-        message: "User with this phone or email already exists"
+        message: "User with this phone or email already exists",
       });
       return;
     }
@@ -63,11 +63,84 @@ export const register = async (
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully. Please link your Telegram.",
+      message:
+        "User registered successfully. Please link your Telegram and verify OTP.",
       data: {
         user: userResponse,
-        telegram_bot_link: `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${user.id}`
-      }
+        telegram_bot_link: `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${user.id}`,
+        note: "Click the Telegram link to receive your verification OTP. You have 5 minutes to verify.",
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyRegistrationOtp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { userId, otp } = req.body;
+
+    if (!userId || !otp) {
+      res.status(400).json({
+        success: false,
+        message: "User ID and OTP are required",
+      });
+      return;
+    }
+
+    const user = await User.findOne({ id: userId });
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    if (user.is_verified) {
+      res.status(400).json({
+        success: false,
+        message: "User already verified",
+      });
+      return;
+    }
+
+    if (!user.is_telegram_linked) {
+      res.status(400).json({
+        success: false,
+        message: "Please link your Telegram account first",
+        data: {
+          telegram_bot_link: `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${user.id}`,
+        },
+      });
+      return;
+    }
+
+    const isValid = validateOTP(otp, user.otp_secret);
+    if (!isValid) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid or expired OTP",
+      });
+      return;
+    }
+
+    user.is_verified = true;
+    await user.save();
+
+    const userResponse = user.toObject() as any;
+    delete userResponse.otp_secret;
+
+    res.status(200).json({
+      success: true,
+      message: "Registration verified successfully! You can now login.",
+      data: {
+        user: userResponse,
+      },
     });
   } catch (error) {
     next(error);
@@ -106,14 +179,29 @@ export const login = async (
       return;
     }
 
+    if (!user.is_verified) {
+      res.status(400).json({
+        success: false,
+        message:
+          "Account not verified. Please complete registration verification first.",
+        code: "ACCOUNT_NOT_VERIFIED",
+        data: {
+          telegram_bot_link: !user.is_telegram_linked
+            ? `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${user.id}`
+            : undefined,
+        },
+      });
+      return;
+    }
+
     if (!user.is_telegram_linked) {
       res.status(400).json({
         success: false,
         message: "Telegram not linked. Please link your Telegram first.",
         code: "TELEGRAM_NOT_LINKED",
         data: {
-          telegram_bot_link: `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${user.id}`
-        }
+          telegram_bot_link: `https://t.me/${process.env.TELEGRAM_BOT_USERNAME}?start=${user.id}`,
+        },
       });
       return;
     }
@@ -127,13 +215,15 @@ export const login = async (
         await sendOTPViaTelegram(user.telegram_chat_id!, otp);
       }
     } catch (otpError) {
-      const errorMessage = otpError instanceof Error ? otpError.message : "Failed to send OTP";
+      const errorMessage =
+        otpError instanceof Error ? otpError.message : "Failed to send OTP";
       console.error("OTP error:", otpError);
-      
+
       res.status(500).json({
         success: false,
         message: errorMessage,
-        error: process.env.NODE_ENV === "development" ? errorMessage : undefined
+        error:
+          process.env.NODE_ENV === "development" ? errorMessage : undefined,
       });
       return;
     }
@@ -201,16 +291,18 @@ export const verifyOtp = async (
       user.role,
     );
 
-    await RefreshToken.create({
-      user_id: user.id,
-      token_hash: refreshToken,
-      expires_at: getRefreshTokenExpiry(),
-    });
+    await RefreshToken.createToken(
+      user.id,
+      refreshToken,
+      getRefreshTokenExpiry(),
+    );
+
+    console.log("Generated Refresh Token:", refreshToken);
 
     setRefreshTokenCookie(res, refreshToken);
 
-      const userResponse = user.toObject() as any;
-      delete userResponse.otp_secret;
+    const userResponse = user.toObject() as any;
+    delete userResponse.otp_secret;
 
     res.status(200).json({
       success: true,
@@ -269,7 +361,6 @@ export const refreshAccessToken = async (
         { revoked_at: new Date() },
       );
       res.status(401).json({
-
         success: false,
         message: "User not found",
       });

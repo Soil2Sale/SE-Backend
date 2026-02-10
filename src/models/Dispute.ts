@@ -60,7 +60,6 @@ const disputeSchema = new Schema<IDispute>(
 
 disputeSchema.index({ order_id: 1 });
 disputeSchema.index({ raised_by_user_id: 1 });
-disputeSchema.index({ id: 1 });
 disputeSchema.index({ status: 1 });
 disputeSchema.index({ created_at: -1 });
 

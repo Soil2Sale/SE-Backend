@@ -67,7 +67,6 @@ const governmentSchemeSchema = new Schema<IGovernmentScheme>(
   },
 );
 
-governmentSchemeSchema.index({ id: 1 });
 governmentSchemeSchema.index({ state: 1 });
 governmentSchemeSchema.index({ crop: 1 });
 governmentSchemeSchema.index({ deadline: 1 });

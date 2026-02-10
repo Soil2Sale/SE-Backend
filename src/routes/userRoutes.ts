@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getAllUsers,
   getUserById,
+  getUserByRole,
   createUser,
   updateUser,
   deactivateUser,
@@ -15,6 +16,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', getAllUsers);
+router.get('/role', getUserByRole);
 router.get('/:id', getUserById);
 router.post('/', validateUser, createUser);
 router.put('/:id', validateUser, updateUser);

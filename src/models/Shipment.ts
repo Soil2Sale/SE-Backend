@@ -14,6 +14,7 @@ export interface IShipment extends Document {
   created_at: Date;
   order_id: string;
   logistics_provider_profile_id: string;
+  logistics_provider_user_id: string;
   vehicle_id: string;
   origin_latitude: number;
   origin_longitude: number;
@@ -47,6 +48,11 @@ const shipmentSchema = new Schema<IShipment>(
       type: String,
       required: true,
       ref: "LogisticsProviderProfile",
+    },
+    logistics_provider_user_id: {
+      type: String,
+      required: true,
+      ref: "User",
     },
     vehicle_id: {
       type: String,
@@ -106,10 +112,9 @@ const shipmentSchema = new Schema<IShipment>(
 
 shipmentSchema.index({ order_id: 1 });
 shipmentSchema.index({ logistics_provider_profile_id: 1 });
+shipmentSchema.index({ logistics_provider_user_id: 1 });
 shipmentSchema.index({ vehicle_id: 1 });
-shipmentSchema.index({ id: 1 });
 shipmentSchema.index({ status: 1 });
-shipmentSchema.index({ tracking_code: 1 });
 shipmentSchema.index({ created_at: -1 });
 
 const Shipment = mongoose.model<IShipment>("Shipment", shipmentSchema);

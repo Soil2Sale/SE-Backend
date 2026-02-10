@@ -91,7 +91,6 @@ auditLogSchema.index({ user_id: 1 });
 auditLogSchema.index({ action: 1 });
 auditLogSchema.index({ entity_type: 1, entity_id: 1 });
 auditLogSchema.index({ created_at: -1 });
-auditLogSchema.index({ id: 1 });
 
 const AuditLog = mongoose.model<IAuditLog>('AuditLog', auditLogSchema);
 

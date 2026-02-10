@@ -79,7 +79,6 @@ const orderSchema = new Schema<IOrder>(
 orderSchema.index({ crop_listing_id: 1 });
 orderSchema.index({ buyer_user_id: 1 });
 orderSchema.index({ sender_user_id: 1 });
-orderSchema.index({ id: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ payment_status: 1 });
 orderSchema.index({ created_at: -1 });

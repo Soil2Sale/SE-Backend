@@ -84,7 +84,6 @@ marketPriceSchema.index({ market_type: 1 });
 marketPriceSchema.index({ price_type: 1 });
 marketPriceSchema.index({ recorded_date: -1 });
 marketPriceSchema.index({ crop_name: 1, state: 1, recorded_date: -1 });
-marketPriceSchema.index({ id: 1 });
 
 const MarketPrice = mongoose.model<IMarketPrice>(
   "MarketPrice",

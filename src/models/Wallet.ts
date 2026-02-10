@@ -48,9 +48,6 @@ const walletSchema = new Schema<IWallet>(
   },
 );
 
-walletSchema.index({ user_id: 1 });
-walletSchema.index({ id: 1 });
-
 const Wallet = mongoose.model<IWallet>("Wallet", walletSchema);
 
 export default Wallet;

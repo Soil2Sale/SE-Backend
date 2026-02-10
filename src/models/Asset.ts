@@ -50,7 +50,6 @@ const assetSchema = new Schema<IAsset>(
 );
 
 assetSchema.index({ user_id: 1 });
-assetSchema.index({ id: 1 });
 assetSchema.index({ asset_type: 1 });
 assetSchema.index({ user_id: 1, asset_type: 1 });
 

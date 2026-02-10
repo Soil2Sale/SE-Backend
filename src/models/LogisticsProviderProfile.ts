@@ -45,8 +45,6 @@ const logisticsProviderProfileSchema = new Schema<ILogisticsProviderProfile>(
   }
 );
 
-logisticsProviderProfileSchema.index({ user_id: 1 });
-logisticsProviderProfileSchema.index({ id: 1 });
 logisticsProviderProfileSchema.index({ verified: 1 });
 
 const LogisticsProviderProfile = mongoose.model<ILogisticsProviderProfile>('LogisticsProviderProfile', logisticsProviderProfileSchema);

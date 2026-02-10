@@ -4,6 +4,7 @@ import CropListing, {
   QualityGrade,
   ICropListing,
 } from "../models/CropListing";
+import FarmerProfile from "../models/FarmerProfile";
 import { FilterQuery } from "mongoose";
 
 export const getAllCropListings = async (
@@ -167,8 +168,18 @@ export const createCropListing = async (
       status,
     } = req.body;
 
+    const profile = await FarmerProfile.findOne({ id: farmer_profile_id });
+    if (!profile) {
+      res.status(404).json({
+        success: false,
+        message: "Farmer profile not found",
+      });
+      return;
+    }
+
     const cropListing = await CropListing.create({
       farmer_profile_id,
+      farmer_user_id: profile.user_id,
       crop_name,
       quality_grade,
       quantity,

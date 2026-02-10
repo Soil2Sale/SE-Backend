@@ -52,8 +52,6 @@ const financialPartnerSchema = new Schema<IFinancialPartner>(
   }
 );
 
-financialPartnerSchema.index({ user_id: 1 });
-financialPartnerSchema.index({ id: 1 });
 financialPartnerSchema.index({ type: 1 });
 
 const FinancialPartner = mongoose.model<IFinancialPartner>('FinancialPartner', financialPartnerSchema);

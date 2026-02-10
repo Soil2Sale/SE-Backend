@@ -50,7 +50,6 @@ const bnplLoanSchema = new Schema<IBNPLLoan>(
 );
 
 bnplLoanSchema.index({ farmer_user_id: 1 });
-bnplLoanSchema.index({ id: 1 });
 bnplLoanSchema.index({ repayment_status: 1 });
 bnplLoanSchema.index({ due_date: 1 });
 bnplLoanSchema.index({ farmer_user_id: 1, repayment_status: 1 });

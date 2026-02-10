@@ -51,7 +51,6 @@ const negotiationLogSchema = new Schema<INegotiationLog>(
 
 negotiationLogSchema.index({ offer_id: 1 });
 negotiationLogSchema.index({ user_id: 1 });
-negotiationLogSchema.index({ id: 1 });
 negotiationLogSchema.index({ created_at: 1 });
 negotiationLogSchema.index({ offer_id: 1, created_at: 1 });
 

@@ -22,6 +22,8 @@ export interface IUser extends Document {
   recovery_email?: string;
   telegram_chat_id?: string;
   is_telegram_linked: boolean;
+  is_verified: boolean;
+  verification_otp_sent_at?: Date;
 }
 
 const userSchema = new Schema<IUser>(
@@ -87,6 +89,14 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
       required: true
+    },
+    is_verified: {
+      type: Boolean,
+      default: false,
+      required: true
+    },
+    verification_otp_sent_at: {
+      type: Date
     }
   },
   {
@@ -96,6 +106,13 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.index({ role: 1 });
+userSchema.index(
+  { verification_otp_sent_at: 1 },
+  {
+    expireAfterSeconds: 300,
+    partialFilterExpression: { is_verified: false }
+  }
+);
 
 userSchema.post('save', async function(doc) {
   if (this.isNew) {

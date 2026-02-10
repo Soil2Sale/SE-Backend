@@ -43,6 +43,34 @@ export const getUserById = async (
   }
 };
 
+export const getUserByRole = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const role = req.query.role as string;
+    
+    if (!role) {
+      res.status(400).json({
+        success: false,
+        message: "Role query parameter is required",
+      });
+      return;
+    }
+    
+    const users = await User.find({ role }) || [];
+
+    res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createUser = async (
   req: Request,
   res: Response,

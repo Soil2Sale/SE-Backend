@@ -60,7 +60,6 @@ const offerSchema = new Schema<IOffer>(
 
 offerSchema.index({ crop_listing_id: 1 });
 offerSchema.index({ buyer_user_id: 1 });
-offerSchema.index({ id: 1 });
 offerSchema.index({ status: 1 });
 offerSchema.index({ crop_listing_id: 1, status: 1 });
 offerSchema.index({ created_at: -1 });

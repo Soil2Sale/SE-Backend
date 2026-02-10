@@ -91,7 +91,6 @@ aiInsightSchema.index({ user_id: 1 });
 aiInsightSchema.index({ insight_type: 1 });
 aiInsightSchema.index({ crop_name: 1 });
 aiInsightSchema.index({ region: 1 });
-aiInsightSchema.index({ id: 1 });
 aiInsightSchema.index({ created_at: -1 });
 aiInsightSchema.index({ validity_window_end: 1 });
 aiInsightSchema.index({ user_id: 1, insight_type: 1 });

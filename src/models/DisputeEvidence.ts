@@ -51,7 +51,6 @@ const disputeEvidenceSchema = new Schema<IDisputeEvidence>(
 
 disputeEvidenceSchema.index({ dispute_id: 1 });
 disputeEvidenceSchema.index({ user_id: 1 });
-disputeEvidenceSchema.index({ id: 1 });
 disputeEvidenceSchema.index({ created_at: 1 });
 
 const DisputeEvidence = mongoose.model<IDisputeEvidence>(

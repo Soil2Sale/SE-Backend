@@ -95,7 +95,6 @@ const notificationSchema = new Schema<INotification>(
 );
 
 notificationSchema.index({ user_id: 1 });
-notificationSchema.index({ id: 1 });
 notificationSchema.index({ notification_type: 1 });
 notificationSchema.index({ reference_type: 1, reference_id: 1 });
 notificationSchema.index({ created_at: -1 });

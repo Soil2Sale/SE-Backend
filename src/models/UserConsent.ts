@@ -57,7 +57,6 @@ const userConsentSchema = new Schema<IUserConsent>(
 
 userConsentSchema.index({ user_id: 1 });
 userConsentSchema.index({ user_id: 1, consent_type: 1 });
-userConsentSchema.index({ id: 1 });
 
 const UserConsent = mongoose.model<IUserConsent>('UserConsent', userConsentSchema);
 

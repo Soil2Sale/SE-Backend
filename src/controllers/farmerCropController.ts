@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import FarmerCrop, { IFarmerCrop } from "../models/FarmerCrop";
+import FarmerProfile from "../models/FarmerProfile";
 import { FilterQuery } from "mongoose";
 
 export const getAllFarmerCrops = async (
@@ -137,8 +138,18 @@ export const createFarmerCrop = async (
   try {
     const { farmer_profile_id, crop_name, seasonality } = req.body;
 
+    const profile = await FarmerProfile.findOne({ id: farmer_profile_id });
+    if (!profile) {
+      res.status(404).json({
+        success: false,
+        message: "Farmer profile not found",
+      });
+      return;
+    }
+
     const farmerCrop = await FarmerCrop.create({
       farmer_profile_id,
+      farmer_user_id: profile.user_id,
       crop_name,
       seasonality,
     });

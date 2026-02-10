@@ -28,6 +28,8 @@ export interface ITransaction extends Document {
   created_at: Date;
   sender_wallet_id: string;
   receiver_wallet_id: string;
+  sender_user_id: string;
+  receiver_user_id: string;
   amount: number;
   type: TransactionType;
   status: TransactionStatus;
@@ -61,6 +63,16 @@ const transactionSchema = new Schema<ITransaction>(
       type: String,
       required: true,
       ref: "Wallet",
+    },
+    sender_user_id: {
+      type: String,
+      required: true,
+      ref: "User",
+    },
+    receiver_user_id: {
+      type: String,
+      required: true,
+      ref: "User",
     },
     amount: {
       type: Number,
@@ -114,7 +126,8 @@ const transactionSchema = new Schema<ITransaction>(
 
 transactionSchema.index({ sender_wallet_id: 1 });
 transactionSchema.index({ receiver_wallet_id: 1 });
-transactionSchema.index({ id: 1 });
+transactionSchema.index({ sender_user_id: 1 });
+transactionSchema.index({ receiver_user_id: 1 });
 transactionSchema.index({ type: 1 });
 transactionSchema.index({ status: 1 });
 transactionSchema.index({ reference_type: 1, reference_id: 1 });

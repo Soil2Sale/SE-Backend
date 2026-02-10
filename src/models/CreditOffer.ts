@@ -67,7 +67,6 @@ const creditOfferSchema = new Schema<ICreditOffer>(
 
 creditOfferSchema.index({ financial_partner_id: 1 });
 creditOfferSchema.index({ farmer_user_id: 1 });
-creditOfferSchema.index({ id: 1 });
 creditOfferSchema.index({ loan_type: 1 });
 creditOfferSchema.index({ farmer_user_id: 1, loan_type: 1 });
 

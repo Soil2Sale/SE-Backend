@@ -10,10 +10,11 @@ export const createBNPLLoan = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { amount, due_date } = req.body;
-    const farmer_user_id = req.user?.userId;
+    const { amount, due_date, farmer_user_id } = req.body;
+    const user_id = req.user?.userId;
+    const user = req.user as any;
 
-    if (!farmer_user_id) {
+    if (!user_id) {
       res.status(401).json({
         success: false,
         message: "User not authenticated",
@@ -21,8 +22,11 @@ export const createBNPLLoan = async (
       return;
     }
 
+    const isAdmin = user?.role === "Admin";
+    const target_farmer_id = isAdmin && farmer_user_id ? farmer_user_id : user_id;
+
     const loan = await BNPLLoan.create({
-      farmer_user_id,
+      farmer_user_id: target_farmer_id,
       amount,
       repayment_status: "PENDING",
       due_date: new Date(due_date),
@@ -30,7 +34,7 @@ export const createBNPLLoan = async (
 
     // Create audit log for BNPL loan creation
     await createAuditLog(
-      farmer_user_id,
+      target_farmer_id,
       AuditAction.BNPL_CREATED,
       "BNPLLoan",
       loan.id,

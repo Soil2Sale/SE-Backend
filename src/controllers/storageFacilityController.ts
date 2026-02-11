@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import StorageFacility, { IStorageFacility } from "../models/StorageFacility";
-import LogisticsProviderProfile from "../models/LogisticsProviderProfile";
 import { FilterQuery } from "mongoose";
 
 export const createStorageFacility = async (
@@ -9,16 +8,7 @@ export const createStorageFacility = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const {
-      name,
-      location_latitude,
-      location_longitude,
-      capacity,
-      pricing_per_unit,
-    } = req.body;
-    const user_id = req.user?.userId;
-
-    if (!user_id) {
+    if (!req.user?.userId) {
       res.status(401).json({
         success: false,
         message: "User not authenticated",
@@ -26,29 +16,49 @@ export const createStorageFacility = async (
       return;
     }
 
-    const profile = await LogisticsProviderProfile.findOne({ user_id });
-    if (!profile) {
-      res.status(404).json({
-        success: false,
-        message: "Logistics provider profile not found",
-      });
-      return;
+    const body = req.body;
+    const facilities = Array.isArray(body) ? body : [body];
+
+    for (const facility of facilities) {
+      const {
+        name,
+        location_latitude,
+        location_longitude,
+        capacity,
+        pricing_per_unit,
+      } = facility;
+
+      if (
+        !name ||
+        location_latitude === undefined ||
+        location_longitude === undefined ||
+        capacity === undefined ||
+        pricing_per_unit === undefined
+      ) {
+        res.status(400).json({
+          success: false,
+          message:
+            "All fields are required: name, location_latitude, location_longitude, capacity, pricing_per_unit",
+        });
+        return;
+      }
     }
 
-    const facility = await StorageFacility.create({
-      logistics_provider_profile_id: profile.id,
-      logistics_provider_user_id: user_id,
-      name,
-      location_latitude,
-      location_longitude,
-      capacity,
-      availability: true,
-      pricing_per_unit,
-    });
+    const createdFacilities = await StorageFacility.create(
+      facilities.map((facility) => ({
+        name: facility.name,
+        location_latitude: facility.location_latitude,
+        location_longitude: facility.location_longitude,
+        capacity: facility.capacity,
+        availability: true,
+        pricing_per_unit: facility.pricing_per_unit,
+      })),
+    );
 
     res.status(201).json({
       success: true,
-      data: facility,
+      data: Array.isArray(body) ? createdFacilities : createdFacilities[0],
+      count: createdFacilities.length,
     });
   } catch (error) {
     next(error);
@@ -171,28 +181,11 @@ export const updateStorageFacility = async (
       return;
     }
 
-    const profile = await LogisticsProviderProfile.findOne({ user_id });
-    if (!profile) {
-      res.status(404).json({
-        success: false,
-        message: "Logistics provider profile not found",
-      });
-      return;
-    }
-
     const facility = await StorageFacility.findOne({ id });
     if (!facility) {
       res.status(404).json({
         success: false,
         message: "Storage facility not found",
-      });
-      return;
-    }
-
-    if (facility.logistics_provider_profile_id !== profile.id) {
-      res.status(403).json({
-        success: false,
-        message: "You are not authorized to update this facility",
       });
       return;
     }
@@ -236,28 +229,11 @@ export const deleteStorageFacility = async (
       return;
     }
 
-    const profile = await LogisticsProviderProfile.findOne({ user_id });
-    if (!profile) {
-      res.status(404).json({
-        success: false,
-        message: "Logistics provider profile not found",
-      });
-      return;
-    }
-
     const facility = await StorageFacility.findOne({ id });
     if (!facility) {
       res.status(404).json({
         success: false,
         message: "Storage facility not found",
-      });
-      return;
-    }
-
-    if (facility.logistics_provider_profile_id !== profile.id) {
-      res.status(403).json({
-        success: false,
-        message: "You are not authorized to delete this facility",
       });
       return;
     }

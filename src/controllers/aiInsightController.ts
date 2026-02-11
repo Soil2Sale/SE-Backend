@@ -8,19 +8,10 @@ export const createInsight = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const {
-      insight_type,
-      content,
-      language_code,
-      crop_name,
-      region,
-      confidence_score,
-      validity_window_start,
-      validity_window_end,
-    } = req.body;
-    const user_id = req.user?.userId;
+    const current_user_id = req.user?.userId;
+    const user = req.user as any;
 
-    if (!user_id) {
+    if (!current_user_id) {
       res.status(401).json({
         success: false,
         message: "User not authenticated",
@@ -28,21 +19,80 @@ export const createInsight = async (
       return;
     }
 
-    const insight = await AIInsight.create({
-      user_id,
-      insight_type,
-      content,
-      language_code,
-      crop_name,
-      region,
-      confidence_score,
-      validity_window_start: new Date(validity_window_start),
-      validity_window_end: new Date(validity_window_end),
-    });
+    const body = req.body;
+    const insights = Array.isArray(body) ? body : [body];
+
+    // Validate all insights
+    for (const insight of insights) {
+      const {
+        insight_type,
+        content,
+        language_code,
+        crop_name,
+        region,
+        confidence_score,
+        validity_window_start,
+        validity_window_end,
+      } = insight;
+
+      if (
+        !insight_type ||
+        !content ||
+        !language_code ||
+        !crop_name ||
+        !region ||
+        confidence_score === undefined ||
+        !validity_window_start ||
+        !validity_window_end
+      ) {
+        res.status(400).json({
+          success: false,
+          message:
+            "All fields are required: insight_type, content, language_code, crop_name, region, confidence_score, validity_window_start, validity_window_end",
+        });
+        return;
+      }
+
+      const startDate = new Date(validity_window_start);
+      const endDate = new Date(validity_window_end);
+
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        res.status(400).json({
+          success: false,
+          message: `Invalid date format for insight "${insight_type}". Use YYYY-MM-DD or ISO format`,
+        });
+        return;
+      }
+
+      if (confidence_score < 0 || confidence_score > 1) {
+        res.status(400).json({
+          success: false,
+          message: "Confidence score must be between 0 and 1",
+        });
+        return;
+      }
+    }
+
+    // Create all insights
+    const isAdmin = user?.role === "Admin";
+    const createdInsights = await AIInsight.create(
+      insights.map((insight) => ({
+        user_id: isAdmin && insight.user_id ? insight.user_id : current_user_id,
+        insight_type: insight.insight_type,
+        content: insight.content,
+        language_code: insight.language_code,
+        crop_name: insight.crop_name,
+        region: insight.region,
+        confidence_score: insight.confidence_score,
+        validity_window_start: new Date(insight.validity_window_start),
+        validity_window_end: new Date(insight.validity_window_end),
+      })),
+    );
 
     res.status(201).json({
       success: true,
-      data: insight,
+      data: Array.isArray(body) ? createdInsights : createdInsights[0],
+      count: createdInsights.length,
     });
   } catch (error) {
     next(error);

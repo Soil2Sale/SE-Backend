@@ -9,8 +9,15 @@ export const createCreditOffer = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { farmer_user_id, loan_type, interest_rate, max_amount } = req.body;
+    const {
+      farmer_user_id,
+      loan_type,
+      interest_rate,
+      max_amount,
+      financial_partner_id,
+    } = req.body;
     const user_id = req.user?.userId;
+    const user = req.user as any;
 
     if (!user_id) {
       res.status(401).json({
@@ -20,17 +27,34 @@ export const createCreditOffer = async (
       return;
     }
 
-    const partner = await FinancialPartner.findOne({ user_id });
-    if (!partner) {
-      res.status(404).json({
+    if (!farmer_user_id || !loan_type || interest_rate === undefined || max_amount === undefined) {
+      res.status(400).json({
         success: false,
-        message: "Financial partner profile not found",
+        message:
+          "All fields are required: farmer_user_id, loan_type, interest_rate, max_amount",
       });
       return;
     }
 
+    const isAdmin = user?.role === "Admin";
+    let partner_id: string;
+
+    if (isAdmin && financial_partner_id) {
+      partner_id = financial_partner_id;
+    } else {
+      const partner = await FinancialPartner.findOne({ user_id });
+      if (!partner) {
+        res.status(404).json({
+          success: false,
+          message: "Financial partner profile not found",
+        });
+        return;
+      }
+      partner_id = partner.id;
+    }
+
     const offer = await CreditOffer.create({
-      financial_partner_id: partner.id,
+      financial_partner_id: partner_id,
       farmer_user_id,
       loan_type,
       interest_rate,

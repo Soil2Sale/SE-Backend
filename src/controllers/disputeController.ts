@@ -32,7 +32,15 @@ export const createDispute = async (
       return;
     }
 
+    // Check authorization: allow admins to override, others must be buyer or sender
+    const user = req.user as any;
+    const isAdmin = user?.role === "Admin";
+    
+    console.log("User Object:", user); // Debug: Check what role value is in the token
+    console.log("Is Admin:", isAdmin);
+    
     if (
+      !isAdmin &&
       order.buyer_user_id !== raised_by_user_id &&
       order.sender_user_id !== raised_by_user_id
     ) {

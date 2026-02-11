@@ -21,6 +21,14 @@ export const createLogisticsProfile = async (
       return;
     }
 
+    if (!company_name || company_name.trim() === "") {
+      res.status(400).json({
+        success: false,
+        message: "Company name is required",
+      });
+      return;
+    }
+
     const existingProfile = await LogisticsProviderProfile.findOne({ user_id });
     if (existingProfile) {
       res.status(400).json({
@@ -31,7 +39,7 @@ export const createLogisticsProfile = async (
     }
 
     const profile = await LogisticsProviderProfile.create({
-      user_id,
+      user_id, // This will be stored as the authenticated user's ID
       company_name,
       verified: false,
     });
@@ -211,6 +219,16 @@ export const verifyLogisticsProvider = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const user = req.user as any;
+
+    // Admin authorization check
+    if (user?.role !== "Admin") {
+      res.status(403).json({
+        success: false,
+        message: "Only admins can verify logistics providers",
+      });
+      return;
+    }
 
     const profile = await LogisticsProviderProfile.findOne({ id });
     if (!profile) {
@@ -225,6 +243,64 @@ export const verifyLogisticsProvider = async (
     await profile.save();
 
     res.status(200).json({
+      success: true,
+      data: profile,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createLogisticsProviderByAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { company_name, user_id } = req.body;
+    const admin = req.user as any;
+
+    // Admin authorization check
+    if (admin?.role !== "Admin") {
+      res.status(403).json({
+        success: false,
+        message: "Only admins can create logistics provider profiles",
+      });
+      return;
+    }
+
+    if (!company_name || company_name.trim() === "") {
+      res.status(400).json({
+        success: false,
+        message: "Company name is required",
+      });
+      return;
+    }
+
+    if (!user_id || user_id.trim() === "") {
+      res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+      return;
+    }
+
+    const existingProfile = await LogisticsProviderProfile.findOne({ user_id });
+    if (existingProfile) {
+      res.status(400).json({
+        success: false,
+        message: "Logistics provider profile already exists for this user",
+      });
+      return;
+    }
+
+    const profile = await LogisticsProviderProfile.create({
+      user_id, // Link to the specified user ID
+      company_name,
+      verified: true, // Auto-verify when created by admin
+    });
+
+    res.status(201).json({
       success: true,
       data: profile,
     });

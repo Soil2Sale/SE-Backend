@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Wallet, { IWallet } from "../models/Wallet";
+import User, { UserRole } from "../models/User";
 import Transaction, {
   TransactionType,
   TransactionStatus,
@@ -112,13 +113,33 @@ export const addFunds = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { amount, payment_method = "UPI" } = req.body;
-    const user_id = req.user?.userId;
+    const { amount, payment_method = "UPI", user_id: user_id_from_body } =
+      req.body;
+    const actor_user_id = req.user?.userId;
 
-    if (!user_id) {
+    if (!actor_user_id) {
       res.status(401).json({
         success: false,
         message: "User not authenticated",
+      });
+      return;
+    }
+
+    const actor = await User.findOne({ id: actor_user_id });
+    if (!actor) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    const user_id =
+      actor.role === UserRole.ADMIN ? user_id_from_body : actor_user_id;
+    if (!user_id) {
+      res.status(400).json({
+        success: false,
+        message: "user_id is required",
       });
       return;
     }
@@ -138,6 +159,8 @@ export const addFunds = async (
     const transaction = await Transaction.create({
       sender_wallet_id: "EXTERNAL",
       receiver_wallet_id: wallet.id,
+      sender_user_id: "EXTERNAL",
+      receiver_user_id: user_id,
       amount,
       type: TransactionType.ADJUSTMENT,
       status: TransactionStatus.SUCCESS,
@@ -199,6 +222,8 @@ export const withdrawFunds = async (
     const transaction = await Transaction.create({
       sender_wallet_id: wallet.id,
       receiver_wallet_id: "EXTERNAL",
+      sender_user_id: user_id,
+      receiver_user_id: "EXTERNAL",
       amount,
       type: TransactionType.ADJUSTMENT,
       status: TransactionStatus.SUCCESS,

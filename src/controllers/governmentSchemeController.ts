@@ -12,29 +12,59 @@ export const createScheme = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const {
-      name,
-      description,
-      state,
-      crop,
-      land_size_min,
-      land_size_max,
-      deadline,
-    } = req.body;
+    const body = req.body;
 
-    const scheme = await GovernmentScheme.create({
-      name,
-      description,
-      state,
-      crop,
-      land_size_min,
-      land_size_max,
-      deadline: new Date(deadline),
-    });
+    // Handle batch creation (array) or single creation (object)
+    const schemes = Array.isArray(body) ? body : [body];
+
+    // Validation for each scheme
+    for (const scheme of schemes) {
+      const { name, description, state, crop, land_size_min, land_size_max, deadline } = scheme;
+
+      if (
+        !name ||
+        !description ||
+        !state ||
+        !crop ||
+        land_size_min === undefined ||
+        land_size_max === undefined ||
+        !deadline
+      ) {
+        res.status(400).json({
+          success: false,
+          message:
+            "All fields are required for each scheme: name, description, state, crop, land_size_min, land_size_max, deadline",
+        });
+        return;
+      }
+
+      const deadlineDate = new Date(deadline);
+      if (isNaN(deadlineDate.getTime())) {
+        res.status(400).json({
+          success: false,
+          message: `Invalid deadline date format for scheme "${name}". Use YYYY-MM-DD or ISO format`,
+        });
+        return;
+      }
+    }
+
+    // Create all schemes
+    const createdSchemes = await GovernmentScheme.create(
+      schemes.map((s) => ({
+        name: s.name,
+        description: s.description,
+        state: s.state,
+        crop: s.crop,
+        land_size_min: s.land_size_min,
+        land_size_max: s.land_size_max,
+        deadline: new Date(s.deadline),
+      }))
+    );
 
     res.status(201).json({
       success: true,
-      data: scheme,
+      data: Array.isArray(body) ? createdSchemes : createdSchemes[0],
+      count: createdSchemes.length,
     });
   } catch (error) {
     next(error);

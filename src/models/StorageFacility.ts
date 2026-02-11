@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from "uuid";
 export interface IStorageFacility extends Document {
   id: string;
   created_at: Date;
-  logistics_provider_profile_id: string;
-  logistics_provider_user_id: string;
+  logistics_provider_profile_id?: string;
+  logistics_provider_user_id?: string;
   name: string;
   location_latitude: number;
   location_longitude: number;
@@ -29,12 +29,10 @@ const storageFacilitySchema = new Schema<IStorageFacility>(
     },
     logistics_provider_profile_id: {
       type: String,
-      required: true,
       ref: "LogisticsProviderProfile",
     },
     logistics_provider_user_id: {
       type: String,
-      required: true,
       ref: "User",
     },
     name: {

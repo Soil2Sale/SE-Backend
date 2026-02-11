@@ -289,6 +289,53 @@ export const updateOrderStatus = async (
   }
 };
 
+export const updatePaymentStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { payment_status } = req.body;
+    const user_id = req.user?.userId;
+
+    if (!user_id) {
+      res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+      return;
+    }
+
+    if (!payment_status) {
+      res.status(400).json({
+        success: false,
+        message: "payment_status is required",
+      });
+      return;
+    }
+
+    const order = await Order.findOne({ id });
+    if (!order) {
+      res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+      return;
+    }
+
+    order.payment_status = payment_status;
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      data: order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const cancelOrder = async (
   req: Request,
   res: Response,

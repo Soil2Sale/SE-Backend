@@ -22,8 +22,10 @@ export const createShipment = async (
       destination_latitude,
       destination_longitude,
       estimated_cost,
+      logistics_provider_profile_id,
     } = req.body;
     const user_id = req.user?.userId;
+    const user = req.user as any;
 
     if (!user_id) {
       res.status(401).json({
@@ -33,13 +35,51 @@ export const createShipment = async (
       return;
     }
 
-    const profile = await LogisticsProviderProfile.findOne({ user_id });
-    if (!profile) {
-      res.status(404).json({
+    if (
+      !order_id ||
+      !vehicle_id ||
+      origin_latitude === undefined ||
+      origin_longitude === undefined ||
+      destination_latitude === undefined ||
+      destination_longitude === undefined ||
+      estimated_cost === undefined
+    ) {
+      res.status(400).json({
         success: false,
-        message: "Logistics provider profile not found",
+        message: "All required fields are missing",
       });
       return;
+    }
+
+    let profile_id: string;
+    let provider_user_id: string;
+
+    // Admin can override and create shipments for any logistics provider
+    if (user?.role === "Admin" && logistics_provider_profile_id) {
+      const profile = await LogisticsProviderProfile.findOne({
+        id: logistics_provider_profile_id,
+      });
+      if (!profile) {
+        res.status(404).json({
+          success: false,
+          message: "Logistics provider profile not found",
+        });
+        return;
+      }
+      profile_id = profile.id;
+      provider_user_id = profile.user_id;
+    } else {
+      // Regular logistics provider creates shipment for their own profile
+      const profile = await LogisticsProviderProfile.findOne({ user_id });
+      if (!profile) {
+        res.status(404).json({
+          success: false,
+          message: "Logistics provider profile not found for this user",
+        });
+        return;
+      }
+      profile_id = profile.id;
+      provider_user_id = user_id;
     }
 
     const order = await Order.findOne({ id: order_id });
@@ -60,10 +100,10 @@ export const createShipment = async (
       return;
     }
 
-    if (vehicle.logistics_provider_profile_id !== profile.id) {
+    if (vehicle.logistics_provider_profile_id !== profile_id) {
       res.status(403).json({
         success: false,
-        message: "Vehicle does not belong to your logistics company",
+        message: "Vehicle does not belong to this logistics company",
       });
       return;
     }
@@ -80,8 +120,8 @@ export const createShipment = async (
 
     const shipment = await Shipment.create({
       order_id,
-      logistics_provider_profile_id: profile.id,
-      logistics_provider_user_id: user_id,
+      logistics_provider_profile_id: profile_id,
+      logistics_provider_user_id: provider_user_id,
       vehicle_id,
       origin_latitude,
       origin_longitude,

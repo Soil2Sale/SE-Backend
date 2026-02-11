@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Offer, { IOffer, OfferStatus } from "../models/Offer";
 import CropListing from "../models/CropListing";
+import User, { UserRole } from "../models/User";
 import { FilterQuery } from "mongoose";
 import { createAuditLog } from "../utils/auditLogger";
 import { AuditAction } from "../models/AuditLog";
@@ -11,13 +12,44 @@ export const createOffer = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { crop_listing_id, offered_price } = req.body;
-    const buyer_user_id = req.user?.userId;
+    const {
+      crop_listing_id,
+      offered_price,
+      buyer_user_id: buyer_user_id_from_body,
+      status,
+    } = req.body;
+    const actor_user_id = req.user?.userId;
 
-    if (!buyer_user_id) {
+    if (!actor_user_id) {
       res.status(401).json({
         success: false,
         message: "User not authenticated",
+      });
+      return;
+    }
+
+    const buyer_user_id = buyer_user_id_from_body || actor_user_id;
+    if (!buyer_user_id) {
+      res.status(400).json({
+        success: false,
+        message: "buyer_user_id is required",
+      });
+      return;
+    }
+
+    const user = await User.findOne({ id: buyer_user_id });
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    if (user.role !== UserRole.BUYER) {
+      res.status(403).json({
+        success: false,
+        message: "Only users with Buyer role can create offers",
       });
       return;
     }
@@ -53,11 +85,19 @@ export const createOffer = async (
       return;
     }
 
+    if (status && !Object.values(OfferStatus).includes(status)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid status value",
+      });
+      return;
+    }
+
     const offer = await Offer.create({
       crop_listing_id,
       buyer_user_id,
       offered_price,
-      status: OfferStatus.PENDING,
+      status: status || OfferStatus.PENDING,
     });
 
     // Create audit log for offer creation

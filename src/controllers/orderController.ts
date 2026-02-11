@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Order, { IOrder, OrderStatus } from "../models/Order";
 import CropListing from "../models/CropListing";
+import User, { UserRole } from "../models/User";
 import { FilterQuery } from "mongoose";
 import { createAuditLog } from "../utils/auditLogger";
 import { AuditAction } from "../models/AuditLog";
@@ -18,6 +19,23 @@ export const createOrder = async (
       res.status(401).json({
         success: false,
         message: "User not authenticated",
+      });
+      return;
+    }
+
+    const user = await User.findOne({ id: buyer_user_id });
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    if (user.role !== UserRole.BUYER) {
+      res.status(403).json({
+        success: false,
+        message: "Only users with Buyer role can create orders",
       });
       return;
     }

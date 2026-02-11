@@ -23,9 +23,7 @@ export const createNegotiation = async (
       return;
     }
 
-    const offer = await Offer.findOne({ id: offer_id }).populate(
-      "crop_listing_id",
-    );
+    const offer = await Offer.findOne({ id: offer_id });
     if (!offer) {
       res.status(404).json({
         success: false,
@@ -34,7 +32,15 @@ export const createNegotiation = async (
       return;
     }
 
-    const listing = offer.crop_listing_id as typeof CropListing.prototype;
+    const listing = await CropListing.findOne({ id: offer.crop_listing_id });
+    if (!listing) {
+      res.status(404).json({
+        success: false,
+        message: "Crop listing not found",
+      });
+      return;
+    }
+
     const isBuyer = offer.buyer_user_id === user_id;
     const isSeller = listing.farmer_user_id === user_id;
 
@@ -82,7 +88,6 @@ export const getNegotiationsByOffer = async (
     const { offerId } = req.params;
 
     const negotiations = await NegotiationLog.find({ offer_id: offerId })
-      .populate("user_id", "name email")
       .sort({ created_at: 1 });
 
     res.status(200).json({
@@ -118,7 +123,6 @@ export const getNegotiationsByUser = async (
 
     const [negotiations, total] = await Promise.all([
       NegotiationLog.find({ user_id })
-        .populate("offer_id")
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),

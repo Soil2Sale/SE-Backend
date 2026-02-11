@@ -41,17 +41,17 @@ export const register = async (
       return;
     }
 
-    const existingUser = await User.findOne({
-      $or: [{ mobile_number }, { recovery_email }],
-    });
+    // const existingUser = await User.findOne({
+    //   $or: [{ mobile_number }, { recovery_email }],
+    // });
 
-    if (existingUser) {
-      res.status(400).json({
-        success: false,
-        message: "User with this phone or email already exists",
-      });
-      return;
-    }
+    // if (existingUser) {
+    //   res.status(400).json({
+    //     success: false,
+    //     message: "User with this phone or email already exists",
+    //   });
+    //   return;
+    // }
 
     const user = await User.create({
       name,

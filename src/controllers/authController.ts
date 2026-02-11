@@ -10,6 +10,8 @@ import {
 import { sendOTPEmail } from "../middlewares/mail/mailer";
 import { generateOTP, validateOTP } from "../middlewares/otp/otpService";
 import { sendOTPViaTelegram } from "../middlewares/otp/otpSender";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 const setRefreshTokenCookie = (res: Response, token: string): void => {
   const isProduction = process.env.NODE_ENV === "production";
@@ -304,6 +306,9 @@ export const verifyOtp = async (
     const userResponse = user.toObject() as any;
     delete userResponse.otp_secret;
 
+    // Create audit log for successful login
+    await createAuditLog(user.id, AuditAction.USER_LOGIN, "User", user.id);
+
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -392,6 +397,7 @@ export const logout = async (
 ): Promise<void> => {
   try {
     const refreshToken = req.cookies?.refreshToken;
+    const userId = req.user?.userId;
 
     if (refreshToken) {
       const storedToken = await RefreshToken.verifyToken(refreshToken);
@@ -400,7 +406,22 @@ export const logout = async (
           { id: storedToken.id },
           { revoked_at: new Date() },
         );
+
+        // Create audit log for token revocation
+        if (userId) {
+          await createAuditLog(
+            userId,
+            AuditAction.TOKEN_REVOKED,
+            "RefreshToken",
+            storedToken.id,
+          );
+        }
       }
+    }
+
+    // Create audit log for logout
+    if (userId) {
+      await createAuditLog(userId, AuditAction.USER_LOGOUT, "User", userId);
     }
 
     res.clearCookie("refreshToken", {

@@ -3,6 +3,8 @@ import NegotiationLog, { INegotiationLog } from "../models/NegotiationLog";
 import Offer from "../models/Offer";
 import CropListing from "../models/CropListing";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createNegotiation = async (
   req: Request,
@@ -50,6 +52,17 @@ export const createNegotiation = async (
       proposed_price,
       message,
     });
+
+    // Check if this is the first negotiation for this offer to log NEGOTIATION_STARTED
+    const negotiationCount = await NegotiationLog.countDocuments({ offer_id });
+    if (negotiationCount === 1) {
+      await createAuditLog(
+        user_id,
+        AuditAction.NEGOTIATION_STARTED,
+        "NegotiationLog",
+        negotiation.id,
+      );
+    }
 
     res.status(201).json({
       success: true,

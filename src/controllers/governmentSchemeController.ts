@@ -3,6 +3,8 @@ import GovernmentScheme, {
   IGovernmentScheme,
 } from "../models/GovernmentScheme";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createScheme = async (
   req: Request,
@@ -190,6 +192,15 @@ export const updateScheme = async (
       { id },
       updateData,
       { new: true, runValidators: true },
+    );
+
+    // Create audit log for scheme update
+    const userId = req.user?.userId || "admin";
+    await createAuditLog(
+      userId,
+      AuditAction.ADMIN_SCHEME_UPDATED,
+      "GovernmentScheme",
+      id,
     );
 
     res.status(200).json({

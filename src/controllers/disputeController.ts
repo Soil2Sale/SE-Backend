@@ -3,6 +3,8 @@ import Dispute, { IDispute, DisputeStatus } from "../models/Dispute";
 import DisputeEvidence from "../models/DisputeEvidence";
 import Order from "../models/Order";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createDispute = async (
   req: Request,
@@ -56,6 +58,14 @@ export const createDispute = async (
       description,
       status: DisputeStatus.OPEN,
     });
+
+    // Create audit log for dispute creation
+    await createAuditLog(
+      raised_by_user_id,
+      AuditAction.DISPUTE_RAISED,
+      "Dispute",
+      dispute.id,
+    );
 
     res.status(201).json({
       success: true,
@@ -224,6 +234,16 @@ export const updateDisputeStatus = async (
 
     dispute.status = status;
     await dispute.save();
+
+    // Create audit log for dispute status change
+    // Check if this is an admin action based on user role
+    const user = req.user as any;
+    const action =
+      user?.role === "ADMIN"
+        ? AuditAction.ADMIN_DISPUTE_ACTION
+        : AuditAction.DISPUTE_STATUS_CHANGED;
+
+    await createAuditLog(user_id, action, "Dispute", dispute.id);
 
     res.status(200).json({
       success: true,

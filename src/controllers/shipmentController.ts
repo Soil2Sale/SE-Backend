@@ -5,6 +5,8 @@ import LogisticsProviderProfile from "../models/LogisticsProviderProfile";
 import Vehicle from "../models/Vehicle";
 import { FilterQuery } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createShipment = async (
   req: Request,
@@ -92,6 +94,14 @@ export const createShipment = async (
 
     vehicle.available = false;
     await vehicle.save();
+
+    // Create audit log for shipment creation
+    await createAuditLog(
+      user_id,
+      AuditAction.SHIPMENT_CREATED,
+      "Shipment",
+      shipment.id,
+    );
 
     res.status(201).json({
       success: true,
@@ -267,6 +277,14 @@ export const updateShipmentStatus = async (
       }
     }
 
+    // Create audit log for shipment status change
+    await createAuditLog(
+      user_id,
+      AuditAction.SHIPMENT_STATUS_CHANGED,
+      "Shipment",
+      shipment.id,
+    );
+
     res.status(200).json({
       success: true,
       data: shipment,
@@ -334,6 +352,14 @@ export const confirmDelivery = async (
       vehicle.available = true;
       await vehicle.save();
     }
+
+    // Create audit log for delivery confirmation
+    await createAuditLog(
+      user_id,
+      AuditAction.DELIVERY_CONFIRMED,
+      "Shipment",
+      shipment.id,
+    );
 
     res.status(200).json({
       success: true,

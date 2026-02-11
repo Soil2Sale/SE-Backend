@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import Offer, { IOffer, OfferStatus } from "../models/Offer";
 import CropListing from "../models/CropListing";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createOffer = async (
   req: Request,
@@ -57,6 +59,14 @@ export const createOffer = async (
       offered_price,
       status: OfferStatus.PENDING,
     });
+
+    // Create audit log for offer creation
+    await createAuditLog(
+      buyer_user_id,
+      AuditAction.OFFER_CREATED,
+      "Offer",
+      offer.id,
+    );
 
     res.status(201).json({
       success: true,
@@ -293,6 +303,23 @@ export const updateOfferStatus = async (
 
     offer.status = status;
     await offer.save();
+
+    // Create audit log for offer status change
+    if (status === OfferStatus.ACCEPTED) {
+      await createAuditLog(
+        user_id,
+        AuditAction.OFFER_ACCEPTED,
+        "Offer",
+        offer.id,
+      );
+    } else if (status === OfferStatus.REJECTED) {
+      await createAuditLog(
+        user_id,
+        AuditAction.OFFER_REJECTED,
+        "Offer",
+        offer.id,
+      );
+    }
 
     res.status(200).json({
       success: true,

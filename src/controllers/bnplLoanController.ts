@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import BNPLLoan, { IBNPLLoan } from "../models/BNPLLoan";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createBNPLLoan = async (
   req: Request,
@@ -25,6 +27,14 @@ export const createBNPLLoan = async (
       repayment_status: "PENDING",
       due_date: new Date(due_date),
     });
+
+    // Create audit log for BNPL loan creation
+    await createAuditLog(
+      farmer_user_id,
+      AuditAction.BNPL_CREATED,
+      "BNPLLoan",
+      loan.id,
+    );
 
     res.status(201).json({
       success: true,
@@ -205,6 +215,14 @@ export const makePayment = async (
       loan.repayment_status = "PARTIAL";
     }
     await loan.save();
+
+    // Create audit log for BNPL repayment
+    await createAuditLog(
+      farmer_user_id,
+      AuditAction.BNPL_REPAYMENT_DEDUCTED,
+      "BNPLLoan",
+      loan.id,
+    );
 
     res.status(200).json({
       success: true,

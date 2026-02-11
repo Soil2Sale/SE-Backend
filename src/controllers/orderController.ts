@@ -2,11 +2,13 @@ import { Request, Response, NextFunction } from "express";
 import Order, { IOrder, OrderStatus } from "../models/Order";
 import CropListing from "../models/CropListing";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createOrder = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { crop_listing_id, final_price, quantity } = req.body;
@@ -58,6 +60,14 @@ export const createOrder = async (
     listing.quantity -= quantity;
     await listing.save();
 
+    // Create audit log for order creation
+    await createAuditLog(
+      buyer_user_id,
+      AuditAction.ORDER_CREATED,
+      "Order",
+      order.id,
+    );
+
     res.status(201).json({
       success: true,
       data: order,
@@ -70,7 +80,7 @@ export const createOrder = async (
 export const getOrdersByBuyer = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const buyer_user_id = req.user?.userId;
@@ -119,7 +129,7 @@ export const getOrdersByBuyer = async (
 export const getOrdersBySeller = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const sender_user_id = req.user?.userId;
@@ -168,7 +178,7 @@ export const getOrdersBySeller = async (
 export const getOrderById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { id } = req.params;
@@ -198,7 +208,7 @@ export const getOrderById = async (
 export const updateOrderStatus = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { id } = req.params;
@@ -230,7 +240,10 @@ export const updateOrderStatus = async (
       return;
     }
 
-    if (order.status === OrderStatus.COMPLETED || order.status === OrderStatus.CANCELLED) {
+    if (
+      order.status === OrderStatus.COMPLETED ||
+      order.status === OrderStatus.CANCELLED
+    ) {
       res.status(400).json({
         success: false,
         message: `Cannot update order with status ${order.status}`,
@@ -240,6 +253,14 @@ export const updateOrderStatus = async (
 
     order.status = status;
     await order.save();
+
+    // Create audit log for order status change
+    await createAuditLog(
+      user_id,
+      AuditAction.ORDER_STATUS_CHANGED,
+      "Order",
+      order.id,
+    );
 
     res.status(200).json({
       success: true,
@@ -253,7 +274,7 @@ export const updateOrderStatus = async (
 export const cancelOrder = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { id } = req.params;

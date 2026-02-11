@@ -6,6 +6,8 @@ import CropListing, {
 } from "../models/CropListing";
 import FarmerProfile from "../models/FarmerProfile";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const getAllCropListings = async (
   req: Request,
@@ -187,6 +189,14 @@ export const createCropListing = async (
       status: status || CropListingStatus.DRAFT,
     });
 
+    // Create audit log for crop listing creation
+    await createAuditLog(
+      profile.user_id,
+      AuditAction.CROP_LISTING_CREATED,
+      "CropListing",
+      cropListing.id,
+    );
+
     res.status(201).json({
       success: true,
       data: cropListing,
@@ -243,6 +253,7 @@ export const updateCropListingStatus = async (
 ): Promise<void> => {
   try {
     const { status } = req.body;
+    const userId = req.user?.userId;
 
     if (!status || !Object.values(CropListingStatus).includes(status)) {
       res.status(400).json({
@@ -264,6 +275,16 @@ export const updateCropListingStatus = async (
         message: "Crop listing not found",
       });
       return;
+    }
+
+    // Create audit log for status change
+    if (userId) {
+      await createAuditLog(
+        userId,
+        AuditAction.CROP_LISTING_STATUS_CHANGED,
+        "CropListing",
+        cropListing.id,
+      );
     }
 
     res.status(200).json({

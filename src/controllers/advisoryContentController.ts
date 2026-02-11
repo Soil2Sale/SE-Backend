@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import AdvisoryContent, { IAdvisoryContent } from "../models/AdvisoryContent";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createAdvisory = async (
   req: Request,
@@ -125,6 +127,15 @@ export const updateAdvisory = async (
       { id },
       updateData,
       { new: true, runValidators: true },
+    );
+
+    // Create audit log for advisory update
+    const userId = req.user?.userId || "admin";
+    await createAuditLog(
+      userId,
+      AuditAction.ADMIN_ADVISORY_UPDATED,
+      "AdvisoryContent",
+      id,
     );
 
     res.status(200).json({

@@ -7,6 +7,8 @@ import Transaction, {
 } from "../models/Transaction";
 import Wallet from "../models/Wallet";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createTransaction = async (
   req: Request,
@@ -50,6 +52,14 @@ export const createTransaction = async (
       return;
     }
 
+    // Create audit log for transaction initiation
+    await createAuditLog(
+      senderWallet.user_id,
+      AuditAction.TRANSACTION_INITIATED,
+      "Transaction",
+      `${sender_wallet_id}-${receiver_wallet_id}`,
+    );
+
     senderWallet.balance -= amount;
     receiverWallet.balance += amount;
 
@@ -68,6 +78,14 @@ export const createTransaction = async (
       payment_method,
       completed_at: new Date(),
     });
+
+    // Create audit log for transaction success
+    await createAuditLog(
+      senderWallet.user_id,
+      AuditAction.TRANSACTION_SUCCESS,
+      "Transaction",
+      transaction.id,
+    );
 
     res.status(201).json({
       success: true,
@@ -323,6 +341,15 @@ export const processRefund = async (
 
     originalTransaction.status = TransactionStatus.REFUNDED;
     await originalTransaction.save();
+
+    // Create audit log for refund initiation
+    const userId = req.user?.userId || originalTransaction.receiver_user_id;
+    await createAuditLog(
+      userId,
+      AuditAction.REFUND_INITIATED,
+      "Transaction",
+      refundTransaction.id,
+    );
 
     res.status(200).json({
       success: true,

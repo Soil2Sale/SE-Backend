@@ -5,6 +5,8 @@ import Notification, {
   NotificationReferenceType,
 } from "../models/Notification";
 import { FilterQuery } from "mongoose";
+import { createAuditLog } from "../utils/auditLogger";
+import { AuditAction } from "../models/AuditLog";
 
 export const createNotification = async (
   req: Request,
@@ -29,6 +31,15 @@ export const createNotification = async (
       reference_type,
       reference_id,
     });
+
+    // Create audit log for notification sent
+    const senderId = req.user?.userId || "system";
+    await createAuditLog(
+      senderId,
+      AuditAction.NOTIFICATION_SENT,
+      "Notification",
+      notification.id,
+    );
 
     res.status(201).json({
       success: true,

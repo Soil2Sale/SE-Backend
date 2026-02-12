@@ -1,0 +1,1344 @@
+{
+  "info": {
+    "_postman_id": "b86f1c6b-17f2-480e-bfd0-f81edd25f8c7",
+    "name": "SE",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "51850737",
+    "_collection_link": "https://go.postman.co/collection/51850737-b86f1c6b-17f2-480e-bfd0-f81edd25f8c7?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Sakthi\",\r\n    \"mobile_number\": \"6380042652\",\r\n    \"role\": \"Cooperative\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify-Registeration",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\": \"0f0954f5-9f38-43fa-8b10-df426d712e31\",\r\n    \"otp\": \"636233\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-registration",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-registration"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"identifier\": \"6380042652\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login-verify-otp",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\": \"0f0954f5-9f38-43fa-8b10-df426d712e31\",\r\n    \"otp\": \"636233\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get All Users",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\": \"0219374c-13cb-471a-aaf0-9d5ed34d0aa3\",\r\n    \"otp\": \"212940\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"userId\": \"0219374c-13cb-471a-aaf0-9d5ed34d0aa3\",\r\n    \"otp\": \"212940\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/users/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    ""
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests"
+                },
+                {
+                  "key": "Cross-Origin-Opener-Policy",
+                  "value": "same-origin"
+                },
+                {
+                  "key": "Cross-Origin-Resource-Policy",
+                  "value": "same-origin"
+                },
+                {
+                  "key": "Origin-Agent-Cluster",
+                  "value": "?1"
+                },
+                {
+                  "key": "Referrer-Policy",
+                  "value": "no-referrer"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=15552000; includeSubDomains"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "X-DNS-Prefetch-Control",
+                  "value": "off"
+                },
+                {
+                  "key": "X-Download-Options",
+                  "value": "noopen"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "SAMEORIGIN"
+                },
+                {
+                  "key": "X-Permitted-Cross-Domain-Policies",
+                  "value": "none"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "http://localhost:3001"
+                },
+                {
+                  "key": "Vary",
+                  "value": "Origin"
+                },
+                {
+                  "key": "Access-Control-Allow-Credentials",
+                  "value": "true"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "1231"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"4cf-HHm2/yYIWOy6DdEm5jBh1hn7DTI\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 11 Feb 2026 04:29:43 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"count\": 3,\n    \"data\": [\n        {\n            \"is_verified\": false,\n            \"_id\": \"69845c9b3fa1f165a7a8d8d4\",\n            \"name\": \"Kanha\",\n            \"mobile_number\": \"8248840667\",\n            \"role\": \"Farmer\",\n            \"aadhaar_verified\": false,\n            \"business_verified\": false,\n            \"recovery_email\": \"kanhabs2005@gmail.com\",\n            \"is_telegram_linked\": true,\n            \"id\": \"9ef91c12-8076-4441-84c2-b8d7dd631414\",\n            \"created_at\": \"2026-02-05T09:02:19.640Z\",\n            \"otp_secret\": \"358217\",\n            \"telegram_chat_id\": \"1984298817\"\n        },\n        {\n            \"_id\": \"698ab7ab961e4475b4ac04a6\",\n            \"name\": \"Raam\",\n            \"mobile_number\": \"7418258506\",\n            \"role\": \"Logistics Provider\",\n            \"aadhaar_verified\": false,\n            \"business_verified\": false,\n            \"recovery_email\": \"raamprathap17242@gmail.com\",\n            \"is_telegram_linked\": true,\n            \"is_verified\": true,\n            \"id\": \"c3b8d8f6-ea77-4f47-a483-d560fe0884ff\",\n            \"created_at\": \"2026-02-10T04:44:27.367Z\",\n            \"otp_secret\": \"321936\",\n            \"telegram_chat_id\": \"5607552852\",\n            \"verification_otp_sent_at\": \"2026-02-10T16:10:58.867Z\"\n        },\n        {\n            \"_id\": \"698c04881109190153cfa2cd\",\n            \"name\": \"Aathitya\",\n            \"mobile_number\": \"8903793921\",\n            \"role\": \"Admin\",\n            \"aadhaar_verified\": false,\n            \"business_verified\": false,\n            \"is_telegram_linked\": true,\n            \"is_verified\": true,\n            \"id\": \"0219374c-13cb-471a-aaf0-9d5ed34d0aa3\",\n            \"created_at\": \"2026-02-11T04:24:40.121Z\",\n            \"otp_secret\": \"333718\",\n            \"telegram_chat_id\": \"1358292760\",\n            \"verification_otp_sent_at\": \"2026-02-11T04:25:01.834Z\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Farmer Profile",
+      "item": [
+        {
+          "name": "createfarmerprofile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n      \"user_id\":\"9ef91c12-8076-4441-84c2-b8d7dd631414\",\r\n      \"land_size\":5.5,\r\n      \"location_latitude\":40.7128,\r\n      \"location_longitude\":-74.0060,\r\n      \"manual_location_correction\":false\r\n    }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/farmer-profiles/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "farmer-profiles",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Farmer Crop",
+      "item": [
+        {
+          "name": "createfarmcrop",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": " {\r\n    \"farmer_profile_id\": \"9ef91c12-8076-4441-84c2-b8d7dd631414\",\r\n    \"crop_name\": \"Maize\",\r\n    \"seasonality\": \"Kharif\"\r\n }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/farmer-crops/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "farmer-crops",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Crop Listing",
+      "item": [
+        {
+          "name": "createcroplisting",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"farmer_profile_id\": \"b1ebcd56-2ff5-4048-a8b0-6c85ac9bd4b9\",\r\n  \"crop_name\": \"Maize\",\r\n  \"quality_grade\": \"PREMIUM\",\r\n  \"quantity\": 1500,\r\n  \"expected_price\": 22000,\r\n  \"status\": \"ACTIVE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/crop-listings/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "crop-listings",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Offers",
+      "item": [
+        {
+          "name": "createoffer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_akshay}}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"crop_listing_id\": \"5d60ed4c-7e1b-4251-8d3b-79a24d05de7c\",\r\n  \"offered_price\": 20000,\r\n  \"status\": \"PENDING\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/offers/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "offers",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Negotiation",
+      "item": [
+        {
+          "name": "createnegotiation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"offer_id\": \"6186adc8-669a-404b-b3ed-bbe53aa94abb\",\r\n  \"proposed_price\": 21800,\r\n  \"message\": \"I appreciate your offer. Final price is 21800 - premium quality Maize, 1500kg ready for delivery.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/negotiations/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "negotiations",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Order",
+      "item": [
+        {
+          "name": "create order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_akshay}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"crop_listing_id\": \"5d60ed4c-7e1b-4251-8d3b-79a24d05de7c\",\r\n  \"final_price\": 21500,\r\n  \"quantity\": 1500\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"payment_status\": \"PAID\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/e480efe6-7053-4edc-8893-4e4b6ca87807/payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "e480efe6-7053-4edc-8893-4e4b6ca87807",
+                "payment"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "createWallet",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"user_id\": \"c3b8d8f6-ea77-4f47-a483-d560fe0884ff\",\r\n  \"currency\": \"INR\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/wallets/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "wallets",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "add-funds",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"user_id\": \"9ef91c12-8076-4441-84c2-b8d7dd631414\",\r\n  \"amount\": 75000,\r\n  \"payment_method\": \"UPI\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/wallets/add-funds",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "wallets",
+                "add-funds"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "New Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"sender_wallet_id\": \"be528da6-9e02-48ce-9698-8e3af230e275\",\r\n  \"receiver_wallet_id\": \"8d241e61-dd88-4a43-ab23-64ebc48c5f80\",\r\n  \"amount\": 21500,\r\n  \"type\": \"CROP_SALE\",\r\n  \"reference_type\": \"ORDER\",\r\n  \"reference_id\": \"e480efe6-7053-4edc-8893-4e4b6ca87807\",\r\n  \"payment_method\": \"WALLET\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dispute",
+      "item": [
+        {
+          "name": "createdispute",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"order_id\": \"e480efe6-7053-4edc-8893-4e4b6ca87807\",\r\n  \"raised_by_user_id\": \"d29ce344-6d26-4055-98f1-b1883d5df31e\",\r\n  \"description\": \"Some bags of grain not dried properly.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/disputes/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "disputes",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Logistics",
+      "item": [
+        {
+          "name": "create logistcs-provider",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"company_name\": \"Bharat Logistics\",\r\n  \"user_id\": \"c3b8d8f6-ea77-4f47-a483-d560fe0884ff\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/logistics-providers/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "logistics-providers",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vehicle",
+      "item": [
+        {
+          "name": "create vehicle",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"vehicle_type\": \"PICKUP_VAN\",\r\n    \"capacity\": 1000,\r\n    \"logistics_provider_profile_id\": \"cd06e921-abe0-4315-852b-c66a9d8e341e\"\r\n  }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/vehicles/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicles",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Shipment",
+      "item": [
+        {
+          "name": "createShipment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"order_id\": \"e480efe6-7053-4edc-8893-4e4b6ca87807\",\r\n  \"vehicle_id\": \"233466a8-4986-436f-8f87-24e90466b822\",\r\n  \"origin_latitude\": 28.7041,\r\n  \"origin_longitude\": 77.1025,\r\n  \"destination_latitude\": 19.0760,\r\n  \"destination_longitude\": 72.8777,\r\n  \"estimated_cost\": 5000\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/shipments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "shipments",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Govt Schemes",
+      "item": [
+        {
+          "name": "create govt-schemes",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"name\": \"Pradhan Mantri Kisan Samman Nidhi\",\r\n    \"description\": \"Direct income support scheme for small and marginal farmers\",\r\n    \"state\": \"Delhi\",\r\n    \"crop\": \"Wheat\",\r\n    \"land_size_min\": 0.5,\r\n    \"land_size_max\": 2,\r\n    \"deadline\": \"2026-12-31\"\r\n  },\r\n  {\r\n    \"name\": \"Soil Health Card Scheme\",\r\n    \"description\": \"Provides soil testing and nutrient management guidance\",\r\n    \"state\": \"Maharashtra\",\r\n    \"crop\": \"Cotton\",\r\n    \"land_size_min\": 0,\r\n    \"land_size_max\": 5,\r\n    \"deadline\": \"2026-06-30\"\r\n  },\r\n  {\r\n    \"name\": \"Krishi Sinchayee Yojana\",\r\n    \"description\": \"Micro irrigation scheme for water conservation\",\r\n    \"state\": \"Karnataka\",\r\n    \"crop\": \"Sugarcane\",\r\n    \"land_size_min\": 1,\r\n    \"land_size_max\": 10,\r\n    \"deadline\": \"2026-09-15\"\r\n  },\r\n  {\r\n    \"name\": \"Rashtriya Krishi Vikas Yojana\",\r\n    \"description\": \"State agricultural sector planning scheme\",\r\n    \"state\": \"Punjab\",\r\n    \"crop\": \"Rice\",\r\n    \"land_size_min\": 0.5,\r\n    \"land_size_max\": 3,\r\n    \"deadline\": \"2026-08-20\"\r\n  },\r\n  {\r\n    \"name\": \"Paramparagat Krishi Vikas Yojana\",\r\n    \"description\": \"Organic farming promotion scheme\",\r\n    \"state\": \"Tamil Nadu\",\r\n    \"crop\": \"Vegetable\",\r\n    \"land_size_min\": 0,\r\n    \"land_size_max\": 2,\r\n    \"deadline\": \"2026-10-31\"\r\n  },\r\n  {\r\n    \"name\": \"Subhadra Yojana\",\r\n    \"description\": \"Special support for women farmers\",\r\n    \"state\": \"Odisha\",\r\n    \"crop\": \"Paddy\",\r\n    \"land_size_min\": 0,\r\n    \"land_size_max\": 4,\r\n    \"deadline\": \"2026-07-15\"\r\n  }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/government-schemes/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "government-schemes",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Storage Facility",
+      "item": [
+        {
+          "name": "create Storagefacility",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"name\": \"Bharat Grain Hub - Delhi\",\r\n    \"location_latitude\": 28.7041,\r\n    \"location_longitude\": 77.1025,\r\n    \"capacity\": 1500,\r\n    \"pricing_per_unit\": 40\r\n  },\r\n  {\r\n    \"name\": \"Bharat Cold Storage - Mumbai\",\r\n    \"location_latitude\": 19.0760,\r\n    \"location_longitude\": 72.8777,\r\n    \"capacity\": 2000,\r\n    \"pricing_per_unit\": 50\r\n  }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/storage-facilities?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "storage-facilities"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "BNPL Loans",
+      "item": [
+        {
+          "name": "creatBNPL",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"farmer_user_id\": \"9ef91c12-8076-4441-84c2-b8d7dd631414\",\r\n  \"amount\": 25000,\r\n  \"due_date\": \"2026-03-15\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bnpl-loans/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "bnpl-loans",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Financial Partner",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Credit Offer",
+      "item": [
+        {
+          "name": "create credit offer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"financial_partner_id\": \"335c0de5-82c1-4300-bd37-af587be2f062\",\r\n  \"farmer_user_id\": \"9ef91c12-8076-4441-84c2-b8d7dd631414\",\r\n  \"loan_type\": \"KCC\",\r\n  \"interest_rate\": 7.5,\r\n  \"max_amount\": 50000\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/credit-offers/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "credit-offers",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI Insight",
+      "item": [
+        {
+          "name": "create aiinsight",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"user_id\": \"9ef91c12-8076-4441-84c2-b8d7dd631414\",\r\n    \"insight_type\": \"WEATHER_ALERT\",\r\n    \"content\": \"Heavy rainfall expected in next 48 hours. Ensure proper drainage in fields.\",\r\n    \"language_code\": \"en\",\r\n    \"crop_name\": \"Rice\",\r\n    \"region\": \"Punjab\",\r\n    \"confidence_score\": 0.92,\r\n    \"validity_window_start\": \"2026-02-12\",\r\n    \"validity_window_end\": \"2026-02-14\"\r\n  },\r\n  {\r\n    \"user_id\": \"d29ce344-6d26-4055-98f1-b1883d5df31e\",\r\n    \"insight_type\": \"MARKET_INSIGHT\",\r\n    \"content\": \"Wheat prices expected to rise 15% next week due to supply shortage. Good buying opportunity.\",\r\n    \"language_code\": \"en\",\r\n    \"crop_name\": \"Wheat\",\r\n    \"region\": \"Haryana\",\r\n    \"confidence_score\": 0.87,\r\n    \"validity_window_start\": \"2026-02-12\",\r\n    \"validity_window_end\": \"2026-02-19\"\r\n  },\r\n  {\r\n    \"user_id\": \"c3b8d8f6-ea77-4f47-a483-d560fe0884ff\",\r\n    \"insight_type\": \"TRAFFIC_PREDICTION\",\r\n    \"content\": \"Optimize delivery routes - peak traffic expected on NH1 between 3-5 PM. Use alternate routes.\",\r\n    \"language_code\": \"en\",\r\n    \"crop_name\": \"General\",\r\n    \"region\": \"Delhi NCR\",\r\n    \"confidence_score\": 0.85,\r\n    \"validity_window_start\": \"2026-02-12\",\r\n    \"validity_window_end\": \"2026-02-18\"\r\n  },\r\n  {\r\n    \"user_id\": \"335c0de5-82c1-4300-bd37-af587be2f062\",\r\n    \"insight_type\": \"MARKET_INSIGHT\",\r\n    \"content\": \"Farmer credit demand spike expected. Prepare inventory of KCC loans and increase approval capacity by 20%.\",\r\n    \"language_code\": \"en\",\r\n    \"crop_name\": \"Multiple\",\r\n    \"region\": \"Pan-India\",\r\n    \"confidence_score\": 0.88,\r\n    \"validity_window_start\": \"2026-02-12\",\r\n    \"validity_window_end\": \"2026-03-12\"\r\n  }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai-insights/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ai-insights",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Market Price",
+      "item": [
+        {
+          "name": "create Market-prices",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"crop_name\": \"Tomato\",\r\n    \"market_location\": \"Koyambedu Market\",\r\n    \"price\": 28.5,\r\n    \"recorded_date\": \"2026-02-10\",\r\n    \"price_type\": \"Retail\",\r\n    \"market_type\": \"MANDI\",\r\n    \"state\": \"Tamil Nadu\"\r\n  },\r\n  {\r\n    \"crop_name\": \"Onion\",\r\n    \"market_location\": \"Azadpur Mandi\",\r\n    \"price\": 22,\r\n    \"recorded_date\": \"2026-02-10\",\r\n    \"price_type\": \"Wholesale\",\r\n    \"market_type\": \"MANDI\",\r\n    \"state\": \"Delhi\"\r\n  },\r\n  {\r\n    \"crop_name\": \"Potato\",\r\n    \"market_location\": \"Belgaum Market\",\r\n    \"price\": 18.75,\r\n    \"recorded_date\": \"2026-02-11\",\r\n    \"price_type\": \"Retail\",\r\n    \"market_type\": \"BUYER\",\r\n    \"state\": \"Karnataka\"\r\n  }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/market-prices/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "market-prices",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Yield History",
+      "item": [
+        {
+          "name": "create yield record",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"farmer_crop_id\": \"3aab34c2-b8a5-47fe-b9bb-c745108e7e33\",\r\n  \"farmer_user_id\": \"9ef91c12-8076-4441-84c2-b8d7dd631414\",\r\n  \"year\": 2024,\r\n  \"yield_quantity\": 1250,\r\n  \"consent_sharing\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/yield-history/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "yield-history",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notification",
+      "item": [
+        {
+          "name": "create notification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"user_id\": \"d29ce344-6d26-4055-98f1-b1883d5df31e\",\r\n    \"notification_type\": \"ORDER_UPDATE\",\r\n    \"message\": \"Your order has been confirmed. Expected delivery: Feb 15, 2026\",\r\n    \"delivery_method\": \"telegram\",\r\n    \"reference_type\": \"ORDER\",\r\n    \"reference_id\": \"e480efe6-7053-4edc-8893-4e4b6ca87807\"\r\n  },\r\n  \r\n  {\r\n    \"user_id\": \"0f0954f5-9f38-43fa-8b10-df426d712e31\",\r\n    \"notification_type\": \"SCHEME_ALERT\",\r\n    \"message\": \"PM-KISAN Cooperative Scheme: New funding opportunity available. Apply before March 31, 2026\",\r\n    \"delivery_method\": \"telegram\",\r\n    \"reference_type\": \"SCHEME\",\r\n    \"reference_id\": \"816ab910-1b7e-4d07-b979-25e027831be4\"\r\n  },\r\n  \r\n  {\r\n    \"user_id\": \"d29ce344-6d26-4055-98f1-b1883d5df31e\",\r\n    \"notification_type\": \"PAYMENT_UPDATE\",\r\n    \"message\": \"Payment of ₹21,500 processed successfully for Order \",\r\n    \"delivery_method\": \"telegram\",\r\n    \"reference_type\": \"TRANSACTION\",\r\n    \"reference_id\": \"22192c53-b8b0-4c67-9e7f-80bdc13727ff\"\r\n  }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Rating Reviews",
+      "item": [
+        {
+          "name": "create review",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_aathi}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n  {\r\n    \"reviewer_user_id\": \"d29ce344-6d26-4055-98f1-b1883d5df31e\",\r\n    \"reviewed_user_id\": \"0f0954f5-9f38-43fa-8b10-df426d712e31\",\r\n    \"rating\": 5,\r\n    \"review_text\": \"Excellent cooperative! Very professional and reliable partner.\"\r\n  },\r\n  {\r\n    \"reviewer_user_id\": \"d29ce344-6d26-4055-98f1-b1883d5df31e\",\r\n    \"reviewed_user_id\": \"335c0de5-82c1-4300-bd37-af587be2f062\",\r\n    \"rating\": 4,\r\n    \"review_text\": \"Good financial services with competitive rates.\"\r\n  },\r\n  {\r\n    \"reviewer_user_id\": \"9ef91c12-8076-4441-84c2-b8d7dd631414\",\r\n    \"reviewed_user_id\": \"d29ce344-6d26-4055-98f1-b1883d5df31e\",\r\n    \"rating\": 5,\r\n    \"review_text\": \"Trustworthy buyer, always pays on time!\"\r\n  }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ratings-reviews/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ratings-reviews",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

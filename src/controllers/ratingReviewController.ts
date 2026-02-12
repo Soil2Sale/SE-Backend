@@ -8,10 +8,11 @@ export const createReview = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { reviewed_user_id, rating, review_text } = req.body;
-    const reviewer_user_id = req.user?.userId;
+    const payload = Array.isArray(req.body) ? req.body : [req.body];
+    const current_user_id = req.user?.userId;
+    const isAdmin = req.user?.role === "Admin";
 
-    if (!reviewer_user_id) {
+    if (!current_user_id) {
       res.status(401).json({
         success: false,
         message: "User not authenticated",
@@ -19,37 +20,72 @@ export const createReview = async (
       return;
     }
 
-    if (reviewer_user_id === reviewed_user_id) {
-      res.status(400).json({
-        success: false,
-        message: "You cannot review yourself",
+    // Validate all entries
+    for (let i = 0; i < payload.length; i += 1) {
+      const { reviewed_user_id, rating, review_text, reviewer_user_id } =
+        payload[i];
+
+      if (!reviewed_user_id || rating === undefined) {
+        res.status(400).json({
+          success: false,
+          message: `Missing required fields in entry ${i + 1}`,
+        });
+        return;
+      }
+
+      if (typeof rating !== "number" || rating < 1 || rating > 5) {
+        res.status(400).json({
+          success: false,
+          message: `Invalid rating in entry ${i + 1}. Must be between 1 and 5`,
+        });
+        return;
+      }
+
+      const effective_reviewer_id =
+        isAdmin && reviewer_user_id ? reviewer_user_id : current_user_id;
+
+      if (effective_reviewer_id === reviewed_user_id) {
+        res.status(400).json({
+          success: false,
+          message: `Cannot review yourself in entry ${i + 1}`,
+        });
+        return;
+      }
+
+      const existingReview = await RatingReview.findOne({
+        reviewer_user_id: effective_reviewer_id,
+        reviewed_user_id,
       });
-      return;
+
+      if (existingReview) {
+        res.status(409).json({
+          success: false,
+          message: `Duplicate review in entry ${i + 1}. Reviewer has already reviewed this user`,
+        });
+        return;
+      }
     }
 
-    const existingReview = await RatingReview.findOne({
-      reviewer_user_id,
-      reviewed_user_id,
-    });
+    const createdReviews = await RatingReview.create(
+      payload.map(
+        ({ reviewed_user_id, rating, review_text, reviewer_user_id }) => {
+          const effective_reviewer_id =
+            isAdmin && reviewer_user_id ? reviewer_user_id : current_user_id;
 
-    if (existingReview) {
-      res.status(409).json({
-        success: false,
-        message: "You have already reviewed this user",
-      });
-      return;
-    }
-
-    const review = await RatingReview.create({
-      reviewer_user_id,
-      reviewed_user_id,
-      rating,
-      review_text,
-    });
+          return {
+            reviewer_user_id: effective_reviewer_id,
+            reviewed_user_id,
+            rating,
+            review_text,
+          };
+        },
+      ),
+    );
 
     res.status(201).json({
       success: true,
-      data: review,
+      data: Array.isArray(req.body) ? createdReviews : createdReviews[0],
+      count: createdReviews.length,
     });
   } catch (error) {
     next(error);

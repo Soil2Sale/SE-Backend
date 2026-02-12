@@ -9,8 +9,15 @@ export const createYieldRecord = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { farmer_crop_id, year, yield_quantity, consent_sharing } = req.body;
+    const {
+      farmer_crop_id,
+      year,
+      yield_quantity,
+      consent_sharing,
+      farmer_user_id,
+    } = req.body;
     const user_id = req.user?.userId;
+    const isAdmin = req.user?.role === "Admin";
 
     if (!user_id) {
       res.status(401).json({
@@ -29,7 +36,17 @@ export const createYieldRecord = async (
       return;
     }
 
-    if (farmerCrop.farmer_user_id !== user_id) {
+    const target_farmer_id = isAdmin && farmer_user_id ? farmer_user_id : user_id;
+
+    if (isAdmin && farmer_user_id && farmerCrop.farmer_user_id !== farmer_user_id) {
+      res.status(400).json({
+        success: false,
+        message: "farmer_user_id does not match the crop owner",
+      });
+      return;
+    }
+
+    if (!isAdmin && farmerCrop.farmer_user_id !== user_id) {
       res.status(403).json({
         success: false,
         message: "You are not authorized to add yield for this crop",
@@ -39,7 +56,7 @@ export const createYieldRecord = async (
 
     const yieldRecord = await YieldHistory.create({
       farmer_crop_id,
-      farmer_user_id: user_id,
+      farmer_user_id: target_farmer_id,
       year,
       yield_quantity,
       consent_sharing: consent_sharing || false,

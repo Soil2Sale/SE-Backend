@@ -14,36 +14,88 @@ export const createNotification = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const {
-      user_id,
-      notification_type,
-      message,
-      delivery_method,
-      reference_type,
-      reference_id,
-    } = req.body;
+    const payload = Array.isArray(req.body) ? req.body : [req.body];
 
-    const notification = await Notification.create({
-      user_id,
-      notification_type,
-      message,
-      delivery_method,
-      reference_type,
-      reference_id,
-    });
+    // Validate all entries
+    for (let i = 0; i < payload.length; i += 1) {
+      const {
+        user_id,
+        notification_type,
+        message,
+        delivery_method,
+        reference_type,
+        reference_id,
+      } = payload[i];
+
+      if (
+        !user_id ||
+        !notification_type ||
+        !message ||
+        !delivery_method ||
+        !reference_type ||
+        !reference_id
+      ) {
+        res.status(400).json({
+          success: false,
+          message: `Missing required fields in entry ${i + 1}`,
+        });
+        return;
+      }
+
+      if (!Object.values(NotificationType).includes(notification_type)) {
+        res.status(400).json({
+          success: false,
+          message: `Invalid notification_type in entry ${i + 1}`,
+        });
+        return;
+      }
+
+      if (!Object.values(NotificationReferenceType).includes(reference_type)) {
+        res.status(400).json({
+          success: false,
+          message: `Invalid reference_type in entry ${i + 1}`,
+        });
+        return;
+      }
+    }
+
+    const createdNotifications = await Notification.create(
+      payload.map(
+        ({
+          user_id,
+          notification_type,
+          message,
+          delivery_method,
+          reference_type,
+          reference_id,
+        }) => ({
+          user_id,
+          notification_type,
+          message,
+          delivery_method,
+          reference_type,
+          reference_id,
+        }),
+      ),
+    );
 
     // Create audit log for notification sent
     const senderId = req.user?.userId || "system";
-    await createAuditLog(
-      senderId,
-      AuditAction.NOTIFICATION_SENT,
-      "Notification",
-      notification.id,
-    );
+    for (const notification of createdNotifications) {
+      await createAuditLog(
+        senderId,
+        AuditAction.NOTIFICATION_SENT,
+        "Notification",
+        notification.id,
+      );
+    }
 
     res.status(201).json({
       success: true,
-      data: notification,
+      data: Array.isArray(req.body)
+        ? createdNotifications
+        : createdNotifications[0],
+      count: createdNotifications.length,
     });
   } catch (error) {
     next(error);

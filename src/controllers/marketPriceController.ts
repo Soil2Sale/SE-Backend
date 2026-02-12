@@ -12,29 +12,95 @@ export const createMarketPrice = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const {
-      crop_name,
-      market_location,
-      price,
-      recorded_date,
-      price_type,
-      market_type,
-      state,
-    } = req.body;
+    const payload = Array.isArray(req.body) ? req.body : [req.body];
 
-    const marketPrice = await MarketPrice.create({
-      crop_name,
-      market_location,
-      price,
-      recorded_date: new Date(recorded_date),
-      price_type,
-      market_type,
-      state,
-    });
+    for (let i = 0; i < payload.length; i += 1) {
+      const {
+        crop_name,
+        market_location,
+        price,
+        recorded_date,
+        price_type,
+        market_type,
+        state,
+      } = payload[i];
+
+      if (
+        !crop_name ||
+        !market_location ||
+        price === undefined ||
+        !recorded_date ||
+        !price_type ||
+        !market_type ||
+        !state
+      ) {
+        res.status(400).json({
+          success: false,
+          message: `Missing required fields in entry ${i + 1}`,
+        });
+        return;
+      }
+
+      const parsedDate = new Date(recorded_date);
+      if (Number.isNaN(parsedDate.getTime())) {
+        res.status(400).json({
+          success: false,
+          message: `Invalid recorded_date in entry ${i + 1}`,
+        });
+        return;
+      }
+
+      if (!Object.values(PriceType).includes(price_type)) {
+        res.status(400).json({
+          success: false,
+          message: `Invalid price_type in entry ${i + 1}`,
+        });
+        return;
+      }
+
+      if (!Object.values(MarketType).includes(market_type)) {
+        res.status(400).json({
+          success: false,
+          message: `Invalid market_type in entry ${i + 1}`,
+        });
+        return;
+      }
+
+      if (typeof price !== "number" || price < 0) {
+        res.status(400).json({
+          success: false,
+          message: `Invalid price in entry ${i + 1}`,
+        });
+        return;
+      }
+    }
+
+    const createdPrices = await MarketPrice.create(
+      payload.map(
+        ({
+          crop_name,
+          market_location,
+          price,
+          recorded_date,
+          price_type,
+          market_type,
+          state,
+        }) => ({
+          crop_name,
+          market_location,
+          price,
+          recorded_date: new Date(recorded_date),
+          price_type,
+          market_type,
+          state,
+        }),
+      ),
+    );
 
     res.status(201).json({
       success: true,
-      data: marketPrice,
+      data: Array.isArray(req.body) ? createdPrices : createdPrices[0],
+      count: createdPrices.length,
     });
   } catch (error) {
     next(error);

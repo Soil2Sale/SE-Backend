@@ -26,7 +26,6 @@ const walletSchema = new Schema<IWallet>(
       type: String,
       required: true,
       unique: true,
-      ref: "User",
     },
     balance: {
       type: Number,

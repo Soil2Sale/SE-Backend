@@ -38,11 +38,7 @@ export const getAllFarmerProfiles = async (
     sortObj[sort_by as string] = sort_order === "asc" ? 1 : -1;
 
     const [farmerProfiles, total] = await Promise.all([
-      FarmerProfile.find(filter)
-        .populate("user_id")
-        .sort(sortObj)
-        .skip(skip)
-        .limit(limitNum),
+      FarmerProfile.find(filter).sort(sortObj).skip(skip).limit(limitNum),
       FarmerProfile.countDocuments(filter),
     ]);
 
@@ -67,7 +63,7 @@ export const getFarmerProfileById = async (
   try {
     const farmerProfile = await FarmerProfile.findOne({
       id: req.params.id,
-    }).populate("user_id");
+    });
 
     if (!farmerProfile) {
       res.status(404).json({
@@ -94,7 +90,7 @@ export const getFarmerProfileByUserId = async (
   try {
     const farmerProfile = await FarmerProfile.findOne({
       user_id: req.params.userId,
-    }).populate("user_id");
+    });
 
     if (!farmerProfile) {
       res.status(404).json({

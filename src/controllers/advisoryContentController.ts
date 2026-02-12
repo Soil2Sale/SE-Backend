@@ -164,11 +164,46 @@ export const deleteAdvisory = async (
       return;
     }
 
-    await AdvisoryContent.findOneAndDelete({ id });
+    await AdvisoryContent.deleteOne({ id });
 
     res.status(200).json({
       success: true,
       message: "Advisory content deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const bookmarkAdvisory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+      return;
+    }
+
+    const advisory = await AdvisoryContent.findOne({ id });
+    if (!advisory) {
+      res.status(404).json({
+        success: false,
+        message: "Advisory content not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Advisory bookmarked successfully",
     });
   } catch (error) {
     next(error);

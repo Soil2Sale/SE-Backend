@@ -63,21 +63,34 @@ export const getAllCropListings = async (
     sortObj[sort_by as string] = sort_order === "asc" ? 1 : -1;
 
     const [cropListings, total] = await Promise.all([
-      CropListing.find(filter)
-        .populate("farmer_profile_id")
-        .sort(sortObj)
-        .skip(skip)
-        .limit(limitNum),
+      CropListing.find(filter).sort(sortObj).skip(skip).limit(limitNum).lean(),
       CropListing.countDocuments(filter),
     ]);
 
+    const farmerProfileIds = [
+      ...new Set(cropListings.map((c: any) => c.farmer_profile_id)),
+    ];
+    const farmerProfiles = await FarmerProfile.find({
+      id: { $in: farmerProfileIds },
+    }).lean();
+    const farmerProfileMap = new Map(
+      farmerProfiles.map((fp: any) => [fp.id, fp]),
+    );
+
+    const populatedCropListings = cropListings.map((listing: any) => ({
+      ...listing,
+      farmer_profile_id:
+        farmerProfileMap.get(listing.farmer_profile_id) ||
+        listing.farmer_profile_id,
+    }));
+
     res.status(200).json({
       success: true,
-      count: cropListings.length,
+      count: populatedCropListings.length,
       total,
       page: pageNum,
       totalPages: Math.ceil(total / limitNum),
-      data: cropListings,
+      data: populatedCropListings,
     });
   } catch (error) {
     next(error);
@@ -92,7 +105,7 @@ export const getCropListingById = async (
   try {
     const cropListing = await CropListing.findOne({
       id: req.params.id,
-    }).populate("farmer_profile_id");
+    }).lean();
 
     if (!cropListing) {
       res.status(404).json({
@@ -102,9 +115,18 @@ export const getCropListingById = async (
       return;
     }
 
+    // Manually populate farmer_profile_id
+    const farmerProfile = await FarmerProfile.findOne({
+      id: cropListing.farmer_profile_id,
+    }).lean();
+    const populatedListing = {
+      ...cropListing,
+      farmer_profile_id: farmerProfile || cropListing.farmer_profile_id,
+    };
+
     res.status(200).json({
       success: true,
-      data: cropListing,
+      data: populatedListing,
     });
   } catch (error) {
     next(error);
@@ -120,13 +142,22 @@ export const getCropListingsByFarmerId = async (
     const cropListings = await CropListing.find({
       farmer_profile_id: req.params.farmerId,
     })
-      .populate("farmer_profile_id")
-      .sort({ created_at: -1 });
+      .sort({ created_at: -1 })
+      .lean();
+
+    // Manually populate farmer_profile_id
+    const farmerProfile = await FarmerProfile.findOne({
+      id: req.params.farmerId,
+    }).lean();
+    const populatedListings = cropListings.map((listing: any) => ({
+      ...listing,
+      farmer_profile_id: farmerProfile || listing.farmer_profile_id,
+    }));
 
     res.status(200).json({
       success: true,
-      count: cropListings.length,
-      data: cropListings,
+      count: populatedListings.length,
+      data: populatedListings,
     });
   } catch (error) {
     next(error);
@@ -142,13 +173,31 @@ export const getActiveCropListings = async (
     const cropListings = await CropListing.find({
       status: CropListingStatus.ACTIVE,
     })
-      .populate("farmer_profile_id")
-      .sort({ created_at: -1 });
+      .sort({ created_at: -1 })
+      .lean();
+
+    // Manually populate farmer_profile_id
+    const farmerProfileIds = [
+      ...new Set(cropListings.map((c: any) => c.farmer_profile_id)),
+    ];
+    const farmerProfiles = await FarmerProfile.find({
+      id: { $in: farmerProfileIds },
+    }).lean();
+    const farmerProfileMap = new Map(
+      farmerProfiles.map((fp: any) => [fp.id, fp]),
+    );
+
+    const populatedListings = cropListings.map((listing: any) => ({
+      ...listing,
+      farmer_profile_id:
+        farmerProfileMap.get(listing.farmer_profile_id) ||
+        listing.farmer_profile_id,
+    }));
 
     res.status(200).json({
       success: true,
-      count: cropListings.length,
-      data: cropListings,
+      count: populatedListings.length,
+      data: populatedListings,
     });
   } catch (error) {
     next(error);

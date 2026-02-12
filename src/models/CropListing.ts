@@ -43,12 +43,10 @@ const cropListingSchema = new Schema<ICropListing>(
     farmer_profile_id: {
       type: String,
       required: true,
-      ref: "FarmerProfile",
     },
     farmer_user_id: {
       type: String,
       required: true,
-      ref: "User",
     },
     crop_name: {
       type: String,

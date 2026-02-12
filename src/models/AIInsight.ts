@@ -45,7 +45,6 @@ const aiInsightSchema = new Schema<IAIInsight>(
     user_id: {
       type: String,
       required: true,
-      ref: "User",
     },
     insight_type: {
       type: String,

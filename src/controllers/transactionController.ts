@@ -104,9 +104,7 @@ export const getTransactionById = async (
   try {
     const { id } = req.params;
 
-    const transaction = await Transaction.findOne({ id })
-      .populate("sender_wallet_id")
-      .populate("receiver_wallet_id");
+    const transaction = await Transaction.findOne({ id }).lean();
 
     if (!transaction) {
       res.status(404).json({
@@ -116,9 +114,25 @@ export const getTransactionById = async (
       return;
     }
 
+    // Manually populate wallet data if not EXTERNAL
+    const [senderWallet, receiverWallet] = await Promise.all([
+      transaction.sender_wallet_id !== "EXTERNAL"
+        ? Wallet.findOne({ id: transaction.sender_wallet_id }).lean()
+        : null,
+      transaction.receiver_wallet_id !== "EXTERNAL"
+        ? Wallet.findOne({ id: transaction.receiver_wallet_id }).lean()
+        : null,
+    ]);
+
+    const populatedTransaction = {
+      ...transaction,
+      sender_wallet_id: senderWallet || transaction.sender_wallet_id,
+      receiver_wallet_id: receiverWallet || transaction.receiver_wallet_id,
+    };
+
     res.status(200).json({
       success: true,
-      data: transaction,
+      data: populatedTransaction,
     });
   } catch (error) {
     next(error);
@@ -170,13 +184,38 @@ export const getTransactionsByUser = async (
 
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
-        .populate("sender_wallet_id", "user_id balance")
-        .populate("receiver_wallet_id", "user_id balance")
         .sort({ created_at: -1 })
         .skip(skip)
-        .limit(limitNum),
+        .limit(limitNum)
+        .lean(),
       Transaction.countDocuments(filter),
     ]);
+
+    // Manually populate wallet data for non-EXTERNAL wallets
+    const populatedTransactions = await Promise.all(
+      transactions.map(async (transaction: any) => {
+        const [senderWallet, receiverWallet] = await Promise.all([
+          transaction.sender_wallet_id !== "EXTERNAL"
+            ? Wallet.findOne(
+                { id: transaction.sender_wallet_id },
+                "user_id balance",
+              ).lean()
+            : null,
+          transaction.receiver_wallet_id !== "EXTERNAL"
+            ? Wallet.findOne(
+                { id: transaction.receiver_wallet_id },
+                "user_id balance",
+              ).lean()
+            : null,
+        ]);
+
+        return {
+          ...transaction,
+          sender_wallet_id: senderWallet || transaction.sender_wallet_id,
+          receiver_wallet_id: receiverWallet || transaction.receiver_wallet_id,
+        };
+      }),
+    );
 
     res.status(200).json({
       success: true,
@@ -250,14 +289,39 @@ export const getTransactionsByOrder = async (
       reference_type: ReferenceType.ORDER,
       reference_id: orderId,
     })
-      .populate("sender_wallet_id", "user_id balance")
-      .populate("receiver_wallet_id", "user_id balance")
-      .sort({ created_at: -1 });
+      .sort({ created_at: -1 })
+      .lean();
+
+    // Manually populate wallet data for non-EXTERNAL wallets
+    const populatedTransactions = await Promise.all(
+      transactions.map(async (transaction: any) => {
+        const [senderWallet, receiverWallet] = await Promise.all([
+          transaction.sender_wallet_id !== "EXTERNAL"
+            ? Wallet.findOne(
+                { id: transaction.sender_wallet_id },
+                "user_id balance",
+              ).lean()
+            : null,
+          transaction.receiver_wallet_id !== "EXTERNAL"
+            ? Wallet.findOne(
+                { id: transaction.receiver_wallet_id },
+                "user_id balance",
+              ).lean()
+            : null,
+        ]);
+
+        return {
+          ...transaction,
+          sender_wallet_id: senderWallet || transaction.sender_wallet_id,
+          receiver_wallet_id: receiverWallet || transaction.receiver_wallet_id,
+        };
+      }),
+    );
 
     res.status(200).json({
       success: true,
-      data: transactions,
-      count: transactions.length,
+      data: populatedTransactions,
+      count: populatedTransactions.length,
     });
   } catch (error) {
     next(error);

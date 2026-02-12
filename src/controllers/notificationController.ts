@@ -165,10 +165,7 @@ export const getNotificationById = async (
   try {
     const { id } = req.params;
 
-    const notification = await Notification.findOne({ id }).populate(
-      "user_id",
-      "name email",
-    );
+    const notification = await Notification.findOne({ id });
 
     if (!notification) {
       res.status(404).json({

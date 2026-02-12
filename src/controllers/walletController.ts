@@ -55,10 +55,7 @@ export const getWalletByUser = async (
       return;
     }
 
-    const wallet = await Wallet.findOne({ user_id }).populate(
-      "user_id",
-      "name email",
-    );
+    const wallet = await Wallet.findOne({ user_id });
 
     if (!wallet) {
       res.status(404).json({
@@ -85,10 +82,7 @@ export const getWalletById = async (
   try {
     const { id } = req.params;
 
-    const wallet = await Wallet.findOne({ id }).populate(
-      "user_id",
-      "name email",
-    );
+    const wallet = await Wallet.findOne({ id });
 
     if (!wallet) {
       res.status(404).json({
@@ -113,8 +107,11 @@ export const addFunds = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { amount, payment_method = "UPI", user_id: user_id_from_body } =
-      req.body;
+    const {
+      amount,
+      payment_method = "UPI",
+      user_id: user_id_from_body,
+    } = req.body;
     const actor_user_id = req.user?.userId;
 
     if (!actor_user_id) {

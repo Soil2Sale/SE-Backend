@@ -52,7 +52,6 @@ const notificationSchema = new Schema<INotification>(
     user_id: {
       type: String,
       required: true,
-      ref: "User",
     },
     notification_type: {
       type: String,

@@ -57,22 +57,18 @@ const transactionSchema = new Schema<ITransaction>(
     sender_wallet_id: {
       type: String,
       required: true,
-      ref: "Wallet",
     },
     receiver_wallet_id: {
       type: String,
       required: true,
-      ref: "Wallet",
     },
     sender_user_id: {
       type: String,
       required: true,
-      ref: "User",
     },
     receiver_user_id: {
       type: String,
       required: true,
-      ref: "User",
     },
     amount: {
       type: Number,

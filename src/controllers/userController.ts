@@ -1,6 +1,41 @@
 import { Request, Response, NextFunction } from "express";
 import User, { IUser } from "../models/User";
 
+export const getProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+      return;
+    }
+
+    const user = await User.findOne({ id: userId });
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getAllUsers = async (
   req: Request,
   res: Response,
@@ -50,7 +85,7 @@ export const getUserByRole = async (
 ): Promise<void> => {
   try {
     const role = req.query.role as string;
-    
+
     if (!role) {
       res.status(400).json({
         success: false,
@@ -58,8 +93,8 @@ export const getUserByRole = async (
       });
       return;
     }
-    
-    const users = await User.find({ role }) || [];
+
+    const users = (await User.find({ role })) || [];
 
     res.status(200).json({
       success: true,

@@ -160,10 +160,7 @@ export const getInsightById = async (
   try {
     const { id } = req.params;
 
-    const insight = await AIInsight.findOne({ id }).populate(
-      "user_id",
-      "name email",
-    );
+    const insight = await AIInsight.findOne({ id });
 
     if (!insight) {
       res.status(404).json({

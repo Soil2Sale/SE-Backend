@@ -7,6 +7,7 @@ import {
   updateFarmerProfile,
   deleteFarmerProfile,
 } from "../controllers/farmerProfileController";
+import { getFarmerFullProfile } from "../controllers/farmerProfileAggregateController";
 import { authenticate } from "../middlewares/auth";
 
 const router = Router();
@@ -14,6 +15,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/", getAllFarmerProfiles);
+router.get("/aggregate/:userId", getFarmerFullProfile);
 router.get("/user/:userId", getFarmerProfileByUserId);
 router.get("/:id", getFarmerProfileById);
 router.post("/", createFarmerProfile);

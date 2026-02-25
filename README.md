@@ -1230,12 +1230,14 @@ schema.index(
 - **Telegram Bot** created via @BotFather
 - **Gmail account** (for email notifications)
 
-### Step 1: Clone Repository
+### Step 1: Local Setup
 
 ```bash
 git clone https://github.com/Soil2Sale/SE-Backend.git
 cd SE-Backend
 ```
+
+**Deployment Note:** This app is hosted on Render at `https://se-backend-b7mk.onrender.com` and automatically deploys when merged into `main`.
 
 ### Step 2: Install Dependencies
 

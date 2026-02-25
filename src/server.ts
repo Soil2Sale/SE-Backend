@@ -55,7 +55,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "OK", timestamp: new Date() });
+  res.status(200).json({
+    status: "OK",
+    timestamp: new Date(),
+    uptime: process.uptime()
+  });
 });
 
 app.use("/api/auth", authRoutes);

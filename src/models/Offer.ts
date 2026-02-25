@@ -11,6 +11,7 @@ export enum OfferStatus {
 export interface IOffer extends Document {
   id: string;
   created_at: Date;
+  farmer_user_id: string;
   crop_listing_id: string;
   buyer_user_id: string;
   offered_price: number;
@@ -36,6 +37,11 @@ const offerSchema = new Schema<IOffer>(
       ref: "CropListing",
     },
     buyer_user_id: {
+      type: String,
+      required: true,
+      ref: "User",
+    },
+    farmer_user_id: {
       type: String,
       required: true,
       ref: "User",

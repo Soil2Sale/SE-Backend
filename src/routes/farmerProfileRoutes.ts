@@ -16,7 +16,7 @@ router.use(authenticate);
 
 router.get("/", getAllFarmerProfiles);
 router.get("/aggregate/:userId", getFarmerFullProfile);
-router.get("/user/:userId", getFarmerProfileByUserId);
+router.get("/user", getFarmerProfileByUserId);
 router.get("/:id", getFarmerProfileById);
 router.post("/", createFarmerProfile);
 router.put("/:id", updateFarmerProfile);

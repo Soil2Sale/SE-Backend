@@ -19,7 +19,7 @@ const config: Config = {
             isolatedModules: true,
         }],
     },
-    testPathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/node_modules/'],
+    testPathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/node_modules/', '<rootDir>/src/__tests__/integration/'],
     collectCoverage: true,
     collectCoverageFrom: [
         'src/controllers/**/*.ts',

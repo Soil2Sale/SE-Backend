@@ -95,7 +95,11 @@ export const getVehiclesByProvider = async (
     }
 
     const vehicles = await Vehicle.find(filter)
-      .populate("logistics_provider_profile_id", "company_name verified")
+      .populate({
+        path: "logistics_provider_profile_id",
+        foreignField: "id",
+        select: "company_name verified",
+      })
       .sort({ created_at: -1 });
 
     res.status(200).json({
@@ -152,10 +156,11 @@ export const getVehicleById = async (
   try {
     const { id } = req.params;
 
-    const vehicle = await Vehicle.findOne({ id }).populate(
-      "logistics_provider_profile_id",
-      "company_name verified",
-    );
+    const vehicle = await Vehicle.findOne({ id }).populate({
+      path: "logistics_provider_profile_id",
+      foreignField: "id",
+      select: "company_name verified",
+    });
 
     if (!vehicle) {
       res.status(404).json({

@@ -27,7 +27,12 @@ export const createCreditOffer = async (
       return;
     }
 
-    if (!farmer_user_id || !loan_type || interest_rate === undefined || max_amount === undefined) {
+    if (
+      !farmer_user_id ||
+      !loan_type ||
+      interest_rate === undefined ||
+      max_amount === undefined
+    ) {
       res.status(400).json({
         success: false,
         message:
@@ -105,8 +110,16 @@ export const getCreditOffers = async (
 
     const [offers, total] = await Promise.all([
       CreditOffer.find(filter)
-        .populate("financial_partner_id", "name type")
-        .populate("farmer_user_id", "name email")
+        .populate({
+          path: "financial_partner_id",
+          foreignField: "id",
+          select: "name type",
+        })
+        .populate({
+          path: "farmer_user_id",
+          foreignField: "id",
+          select: "name email",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -135,8 +148,16 @@ export const getCreditOfferById = async (
     const { id } = req.params;
 
     const offer = await CreditOffer.findOne({ id })
-      .populate("financial_partner_id", "name type")
-      .populate("farmer_user_id", "name email phone_number");
+      .populate({
+        path: "financial_partner_id",
+        foreignField: "id",
+        select: "name type",
+      })
+      .populate({
+        path: "farmer_user_id",
+        foreignField: "id",
+        select: "name email phone_number",
+      });
 
     if (!offer) {
       res.status(404).json({
@@ -183,7 +204,11 @@ export const getCreditOffersByFarmer = async (
 
     const [offers, total] = await Promise.all([
       CreditOffer.find(filter)
-        .populate("financial_partner_id", "name type")
+        .populate({
+          path: "financial_partner_id",
+          foreignField: "id",
+          select: "name type",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -242,7 +267,11 @@ export const getCreditOffersByPartner = async (
 
     const [offers, total] = await Promise.all([
       CreditOffer.find(filter)
-        .populate("farmer_user_id", "name email")
+        .populate({
+          path: "farmer_user_id",
+          foreignField: "id",
+          select: "name email",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),

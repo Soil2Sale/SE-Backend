@@ -65,7 +65,11 @@ export const getFinancialPartners = async (
 
     const [partners, total] = await Promise.all([
       FinancialPartner.find(filter)
-        .populate("user_id", "name email phone_number")
+        .populate({
+          path: "user_id",
+          foreignField: "id",
+          select: "name email phone_number",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -93,10 +97,11 @@ export const getFinancialPartnerById = async (
   try {
     const { id } = req.params;
 
-    const partner = await FinancialPartner.findOne({ id }).populate(
-      "user_id",
-      "name email phone_number",
-    );
+    const partner = await FinancialPartner.findOne({ id }).populate({
+      path: "user_id",
+      foreignField: "id",
+      select: "name email phone_number",
+    });
 
     if (!partner) {
       res.status(404).json({
@@ -131,10 +136,11 @@ export const getFinancialPartnerByUser = async (
       return;
     }
 
-    const partner = await FinancialPartner.findOne({ user_id }).populate(
-      "user_id",
-      "name email phone_number",
-    );
+    const partner = await FinancialPartner.findOne({ user_id }).populate({
+      path: "user_id",
+      foreignField: "id",
+      select: "name email phone_number",
+    });
 
     if (!partner) {
       res.status(404).json({

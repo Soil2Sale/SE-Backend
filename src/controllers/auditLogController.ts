@@ -82,7 +82,7 @@ export const getAuditLogs = async (
 
     const [logs, total] = await Promise.all([
       AuditLog.find(filter)
-        .populate("user_id", "name email")
+        .populate({ path: "user_id", foreignField: "id", select: "name email" })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -110,10 +110,11 @@ export const getAuditLogById = async (
   try {
     const { id } = req.params;
 
-    const auditLog = await AuditLog.findOne({ id }).populate(
-      "user_id",
-      "name email",
-    );
+    const auditLog = await AuditLog.findOne({ id }).populate({
+      path: "user_id",
+      foreignField: "id",
+      select: "name email",
+    });
 
     if (!auditLog) {
       res.status(404).json({
@@ -152,7 +153,7 @@ export const getAuditLogsByEntity = async (
 
     const [logs, total] = await Promise.all([
       AuditLog.find(filter)
-        .populate("user_id", "name email")
+        .populate({ path: "user_id", foreignField: "id", select: "name email" })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),

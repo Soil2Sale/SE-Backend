@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Application } from "express";
+import { createServer } from "http";
 import mongoose from "mongoose";
 import cors from "cors";
 import helmet from "helmet";
@@ -24,6 +25,7 @@ import disputeRoutes from "./routes/disputeRoutes";
 import logisticsProviderRoutes from "./routes/logisticsProviderRoutes";
 import vehicleRoutes from "./routes/vehicleRoutes";
 import shipmentRoutes from "./routes/shipmentRoutes";
+import shipmentRequestRoutes from "./routes/shipmentRequestRoutes";
 import storageFacilityRoutes from "./routes/storageFacilityRoutes";
 import bnplLoanRoutes from "./routes/bnplLoanRoutes";
 import financialPartnerRoutes from "./routes/financialPartnerRoutes";
@@ -37,10 +39,14 @@ import notificationRoutes from "./routes/notificationRoutes";
 import ratingReviewRoutes from "./routes/ratingReviewRoutes";
 import assetRoutes from "./routes/assetRoutes";
 import auditLogRoutes from "./routes/auditLogRoutes";
+import chatRoutes from "./routes/chatRoutes";
+import { initSocket } from "./socket";
 import "./config/telegram";
 
 const app: Application = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 3000;
+initSocket(httpServer);
 
 app.use(helmet());
 app.use(
@@ -58,7 +64,7 @@ app.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
     timestamp: new Date(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
@@ -77,6 +83,7 @@ app.use("/api/disputes", disputeRoutes);
 app.use("/api/logistics-providers", logisticsProviderRoutes);
 app.use("/api/vehicles", vehicleRoutes);
 app.use("/api/shipments", shipmentRoutes);
+app.use("/api/shipment-requests", shipmentRequestRoutes);
 app.use("/api/storage-facilities", storageFacilityRoutes);
 app.use("/api/bnpl-loans", bnplLoanRoutes);
 app.use("/api/financial-partners", financialPartnerRoutes);
@@ -90,12 +97,13 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/ratings-reviews", ratingReviewRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/audit-logs", auditLogRoutes);
+app.use("/api/chats", chatRoutes);
 
 app.use(errorHandler);
 
 try {
   connectDB();
-  app.listen(PORT, () => {
+  httpServer.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV}`);
   });

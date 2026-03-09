@@ -87,7 +87,11 @@ export const getAssetById = async (
   try {
     const { id } = req.params;
 
-    const asset = await Asset.findOne({ id }).populate("user_id", "name email");
+    const asset = await Asset.findOne({ id }).populate({
+      path: "user_id",
+      foreignField: "id",
+      select: "name email",
+    });
 
     if (!asset) {
       res.status(404).json({

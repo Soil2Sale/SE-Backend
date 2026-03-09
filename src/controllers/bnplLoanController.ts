@@ -23,7 +23,8 @@ export const createBNPLLoan = async (
     }
 
     const isAdmin = user?.role === "Admin";
-    const target_farmer_id = isAdmin && farmer_user_id ? farmer_user_id : user_id;
+    const target_farmer_id =
+      isAdmin && farmer_user_id ? farmer_user_id : user_id;
 
     const loan = await BNPLLoan.create({
       farmer_user_id: target_farmer_id,
@@ -101,10 +102,11 @@ export const getBNPLLoanById = async (
   try {
     const { id } = req.params;
 
-    const loan = await BNPLLoan.findOne({ id }).populate(
-      "farmer_user_id",
-      "name email",
-    );
+    const loan = await BNPLLoan.findOne({ id }).populate({
+      path: "farmer_user_id",
+      foreignField: "id",
+      select: "name email",
+    });
 
     if (!loan) {
       res.status(404).json({

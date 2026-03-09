@@ -36,9 +36,14 @@ export const createYieldRecord = async (
       return;
     }
 
-    const target_farmer_id = isAdmin && farmer_user_id ? farmer_user_id : user_id;
+    const target_farmer_id =
+      isAdmin && farmer_user_id ? farmer_user_id : user_id;
 
-    if (isAdmin && farmer_user_id && farmerCrop.farmer_user_id !== farmer_user_id) {
+    if (
+      isAdmin &&
+      farmer_user_id &&
+      farmerCrop.farmer_user_id !== farmer_user_id
+    ) {
       res.status(400).json({
         success: false,
         message: "farmer_user_id does not match the crop owner",
@@ -101,7 +106,11 @@ export const getYieldsByFarmer = async (
 
     const [yields, total] = await Promise.all([
       YieldHistory.find(filter)
-        .populate("farmer_crop_id", "crop_name land_area_acres")
+        .populate({
+          path: "farmer_crop_id",
+          foreignField: "id",
+          select: "crop_name land_area_acres",
+        })
         .sort({ year: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -130,7 +139,11 @@ export const getYieldsByCrop = async (
     const { cropId } = req.params;
 
     const yields = await YieldHistory.find({ farmer_crop_id: cropId })
-      .populate("farmer_crop_id", "crop_name land_area_acres")
+      .populate({
+        path: "farmer_crop_id",
+        foreignField: "id",
+        select: "crop_name land_area_acres",
+      })
       .sort({ year: -1 });
 
     res.status(200).json({
@@ -151,10 +164,11 @@ export const getYieldById = async (
   try {
     const { id } = req.params;
 
-    const yieldRecord = await YieldHistory.findOne({ id }).populate(
-      "farmer_crop_id",
-      "crop_name land_area_acres farmer_user_id",
-    );
+    const yieldRecord = await YieldHistory.findOne({ id }).populate({
+      path: "farmer_crop_id",
+      foreignField: "id",
+      select: "crop_name land_area_acres farmer_user_id",
+    });
 
     if (!yieldRecord) {
       res.status(404).json({
@@ -191,9 +205,10 @@ export const updateYieldRecord = async (
       return;
     }
 
-    const yieldRecord = await YieldHistory.findOne({ id }).populate(
-      "farmer_crop_id",
-    );
+    const yieldRecord = await YieldHistory.findOne({ id }).populate({
+      path: "farmer_crop_id",
+      foreignField: "id",
+    });
     if (!yieldRecord) {
       res.status(404).json({
         success: false,
@@ -254,9 +269,10 @@ export const deleteYieldRecord = async (
       return;
     }
 
-    const yieldRecord = await YieldHistory.findOne({ id }).populate(
-      "farmer_crop_id",
-    );
+    const yieldRecord = await YieldHistory.findOne({ id }).populate({
+      path: "farmer_crop_id",
+      foreignField: "id",
+    });
     if (!yieldRecord) {
       res.status(404).json({
         success: false,

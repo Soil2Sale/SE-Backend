@@ -6,6 +6,7 @@ import {
   getLogisticsProfileByUser,
   updateLogisticsProfile,
   verifyLogisticsProvider,
+  getAvailableLogisticsProviders,
 } from "../controllers/logisticsProviderController";
 import { authenticate } from "../middlewares/auth";
 
@@ -13,6 +14,7 @@ const router = Router();
 
 router.use(authenticate);
 
+router.get("/available", getAvailableLogisticsProviders);
 router.get("/", getLogisticsProfiles);
 router.get("/me", getLogisticsProfileByUser);
 router.get("/:id", getLogisticsProfileById);

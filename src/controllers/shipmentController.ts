@@ -161,8 +161,16 @@ export const getShipmentsByOrder = async (
     const { orderId } = req.params;
 
     const shipments = await Shipment.find({ order_id: orderId })
-      .populate("logistics_provider_profile_id", "company_name")
-      .populate("vehicle_id", "vehicle_type capacity")
+      .populate({
+        path: "logistics_provider_profile_id",
+        foreignField: "id",
+        select: "company_name",
+      })
+      .populate({
+        path: "vehicle_id",
+        foreignField: "id",
+        select: "vehicle_type capacity",
+      })
       .sort({ created_at: -1 });
 
     res.status(200).json({
@@ -205,8 +213,12 @@ export const getShipmentsByProvider = async (
 
     const [shipments, total] = await Promise.all([
       Shipment.find(filter)
-        .populate("order_id")
-        .populate("vehicle_id", "vehicle_type capacity")
+        .populate({ path: "order_id", foreignField: "id" })
+        .populate({
+          path: "vehicle_id",
+          foreignField: "id",
+          select: "vehicle_type capacity",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -235,9 +247,17 @@ export const getShipmentById = async (
     const { id } = req.params;
 
     const shipment = await Shipment.findOne({ id })
-      .populate("order_id")
-      .populate("logistics_provider_profile_id", "company_name")
-      .populate("vehicle_id", "vehicle_type capacity");
+      .populate({ path: "order_id", foreignField: "id" })
+      .populate({
+        path: "logistics_provider_profile_id",
+        foreignField: "id",
+        select: "company_name",
+      })
+      .populate({
+        path: "vehicle_id",
+        foreignField: "id",
+        select: "vehicle_type capacity",
+      });
 
     if (!shipment) {
       res.status(404).json({
@@ -301,6 +321,9 @@ export const updateShipmentStatus = async (
     }
 
     shipment.status = status;
+    if (status === ShipmentStatus.DISPATCHED) {
+      shipment.dispatched_at = new Date();
+    }
     await shipment.save();
 
     if (status === ShipmentStatus.DELIVERED) {
@@ -419,9 +442,17 @@ export const trackShipment = async (
     const { trackingCode } = req.params;
 
     const shipment = await Shipment.findOne({ tracking_code: trackingCode })
-      .populate("order_id")
-      .populate("logistics_provider_profile_id", "company_name")
-      .populate("vehicle_id", "vehicle_type");
+      .populate({ path: "order_id", foreignField: "id" })
+      .populate({
+        path: "logistics_provider_profile_id",
+        foreignField: "id",
+        select: "company_name",
+      })
+      .populate({
+        path: "vehicle_id",
+        foreignField: "id",
+        select: "vehicle_type",
+      });
 
     if (!shipment) {
       res.status(404).json({

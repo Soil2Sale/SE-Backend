@@ -1,13 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import Offer, { IOffer, OfferStatus } from "../models/Offer";
 import CropListing from "../models/CropListing";
+import Order, { OrderStatus } from "../models/Order";
 import User, { UserRole } from "../models/User";
 import { FilterQuery } from "mongoose";
 import { createAuditLog } from "../utils/auditLogger";
 import { AuditAction } from "../models/AuditLog";
 import { createNotification } from "./notificationController";
 import { sendMSGViaTelegram } from "../middlewares/otp/otpSender";
-import Notification, { NotificationReferenceType, NotificationType } from "../models/Notification";
+import Notification, {
+  NotificationReferenceType,
+  NotificationType,
+} from "../models/Notification";
 import { off } from "process";
 
 export const createOffer = async (
@@ -123,14 +127,14 @@ export const createOffer = async (
         message: `You have received a new offer of ₹${offered_price} for your crop listing.`,
         delivery_method: "TELEGRAM",
         reference_type: NotificationReferenceType.ORDER,
-        reference_id: offer.id
+        reference_id: offer.id,
       });
 
       // Send Telegram message to farmer
       if (farmerUser.telegram_chat_id) {
         await sendMSGViaTelegram(
           farmerUser.telegram_chat_id,
-          `You have received a new offer of ₹${offered_price} for your crop listing.`
+          `You have received a new offer of ₹${offered_price} for your crop listing.`,
         );
       }
     }
@@ -159,7 +163,11 @@ export const getOffersByListing = async (
     }
 
     const offers = await Offer.find(filter)
-      .populate("buyer_user_id", "name email")
+      .populate({
+        path: "buyer_user_id",
+        foreignField: "id",
+        select: "name email",
+      })
       .sort({ created_at: -1 });
 
     res.status(200).json({
@@ -200,16 +208,15 @@ export const getOffersByBuyer = async (
     const skip = (pageNum - 1) * limitNum;
 
     const [offers, total] = await Promise.all([
-      Offer.find(filter)
-        .sort({ created_at: -1 })
-        .skip(skip)
-        .limit(limitNum),
+      Offer.find(filter).sort({ created_at: -1 }).skip(skip).limit(limitNum),
       Offer.countDocuments(filter),
     ]);
 
     const offersWithListing = await Promise.all(
       offers.map(async (offer) => {
-        const cropListing = await CropListing.findOne({ id: offer.crop_listing_id });
+        const cropListing = await CropListing.findOne({
+          id: offer.crop_listing_id,
+        });
         return {
           ...offer.toObject(),
           crop_listing: cropListing
@@ -222,7 +229,7 @@ export const getOffersByBuyer = async (
               }
             : null,
         };
-      })
+      }),
     );
 
     res.status(200).json({
@@ -273,16 +280,15 @@ export const getOffersBySeller = async (
     const skip = (pageNum - 1) * limitNum;
 
     const [offers, total] = await Promise.all([
-      Offer.find(filter)
-        .sort({ created_at: -1 })
-        .skip(skip)
-        .limit(limitNum),
+      Offer.find(filter).sort({ created_at: -1 }).skip(skip).limit(limitNum),
       Offer.countDocuments(filter),
     ]);
 
     const offersWithListing = await Promise.all(
       offers.map(async (offer) => {
-        const cropListing = await CropListing.findOne({ id: offer.crop_listing_id });
+        const cropListing = await CropListing.findOne({
+          id: offer.crop_listing_id,
+        });
         return {
           ...offer.toObject(),
           crop_listing: cropListing
@@ -295,7 +301,7 @@ export const getOffersBySeller = async (
               }
             : null,
         };
-      })
+      }),
     );
 
     res.status(200).json({
@@ -320,8 +326,12 @@ export const getOfferById = async (
     const { id } = req.params;
 
     const offer = await Offer.findOne({ id })
-      .populate("crop_listing_id")
-      .populate("buyer_user_id", "name email phone_number");
+      .populate({ path: "crop_listing_id", foreignField: "id" })
+      .populate({
+        path: "buyer_user_id",
+        foreignField: "id",
+        select: "name email phone_number",
+      });
 
     if (!offer) {
       res.status(404).json({
@@ -375,7 +385,10 @@ export const updateOffer = async (
       return;
     }
 
-    if (offer.status !== OfferStatus.PENDING && offer.status !== OfferStatus.WITHDRAWN) {
+    if (
+      offer.status !== OfferStatus.PENDING &&
+      offer.status !== OfferStatus.WITHDRAWN
+    ) {
       res.status(400).json({
         success: false,
         message: "Only pending/withdrawn offers can be updated",
@@ -399,14 +412,14 @@ export const updateOffer = async (
         message: `The offer price has been updated to ₹${offer.offered_price} for your crop listing.`,
         delivery_method: "TELEGRAM",
         reference_type: NotificationReferenceType.ORDER,
-        reference_id: offer.id
+        reference_id: offer.id,
       });
 
       // Send Telegram message to farmer
       if (farmerUser.telegram_chat_id) {
         await sendMSGViaTelegram(
           farmerUser.telegram_chat_id,
-          `The offer price has been updated to ₹${offer.offered_price} for your crop listing.`
+          `The offer price has been updated to ₹${offer.offered_price} for your crop listing.`,
         );
       }
     }
@@ -438,7 +451,10 @@ export const updateOfferStatus = async (
       return;
     }
 
-    const offer = await Offer.findOne({ id }).populate("crop_listing_id");
+    const offer = await Offer.findOne({ id }).populate({
+      path: "crop_listing_id",
+      foreignField: "id",
+    });
     if (!offer) {
       res.status(404).json({
         success: false,
@@ -487,6 +503,25 @@ export const updateOfferStatus = async (
         "Offer",
         offer.id,
       );
+
+      // Automatically create an order when offer is accepted
+      const cropListing = offer.crop_listing_id as any;
+      const order = await Order.create({
+        crop_listing_id: cropListing.id ?? cropListing,
+        buyer_user_id: offer.buyer_user_id,
+        sender_user_id: offer.farmer_user_id,
+        final_price: offer.offered_price,
+        quantity: cropListing.quantity ?? 0,
+        status: OrderStatus.CONFIRMED,
+        payment_status: "PENDING",
+      });
+
+      await createAuditLog(
+        user_id,
+        AuditAction.ORDER_CREATED,
+        "Order",
+        order.id,
+      );
     } else if (status === OfferStatus.REJECTED) {
       await createAuditLog(
         user_id,
@@ -505,14 +540,14 @@ export const updateOfferStatus = async (
         message: `The offer status has been updated to ${status} for your crop listing.`,
         delivery_method: "TELEGRAM",
         reference_type: NotificationReferenceType.ORDER,
-        reference_id: offer.id
+        reference_id: offer.id,
       });
 
       // Send Telegram message to buyer
       if (buyerUser.telegram_chat_id) {
         await sendMSGViaTelegram(
           buyerUser.telegram_chat_id,
-          `The offer status has been updated to ${status} for your crop listing.`
+          `The offer status has been updated to ${status} for your crop listing.`,
         );
       }
     }
@@ -580,14 +615,14 @@ export const withdrawOffer = async (
         message: `The offer has been withdrawn for your crop listing.`,
         delivery_method: "TELEGRAM",
         reference_type: NotificationReferenceType.ORDER,
-        reference_id: offer.id
+        reference_id: offer.id,
       });
 
       // Send Telegram message to farmer
       if (farmerUser.telegram_chat_id) {
         await sendMSGViaTelegram(
           farmerUser.telegram_chat_id,
-          `The offer has been withdrawn for your crop listing.`
+          `The offer has been withdrawn for your crop listing.`,
         );
       }
     }

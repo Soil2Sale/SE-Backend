@@ -82,7 +82,11 @@ export const getStorageFacilitiesByProvider = async (
     }
 
     const facilities = await StorageFacility.find(filter)
-      .populate("logistics_provider_profile_id", "company_name verified")
+      .populate({
+        path: "logistics_provider_profile_id",
+        foreignField: "id",
+        select: "company_name verified",
+      })
       .sort({ created_at: -1 });
 
     res.status(200).json({
@@ -141,10 +145,11 @@ export const getStorageFacilityById = async (
   try {
     const { id } = req.params;
 
-    const facility = await StorageFacility.findOne({ id }).populate(
-      "logistics_provider_profile_id",
-      "company_name verified",
-    );
+    const facility = await StorageFacility.findOne({ id }).populate({
+      path: "logistics_provider_profile_id",
+      foreignField: "id",
+      select: "company_name verified",
+    });
 
     if (!facility) {
       res.status(404).json({

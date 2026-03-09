@@ -17,11 +17,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-<<<<<<< HEAD
-        node-version: '18'
-=======
         node-version: '20'
->>>>>>> origin/main
         cache: 'npm'
 
     - name: Install dependencies
@@ -31,14 +27,10 @@ jobs:
       run: npm run lint
 
     - name: Run NPM Audit (Security Checks)
-<<<<<<< HEAD
       run: npm audit --audit-level=high || true
 
     - name: Run Unit Tests
       run: npm test
-=======
-      run: npm audit --audit-level=critical || true
->>>>>>> origin/main
 
     - name: Validate Docker Build
       run: docker build -t se-backend-test .

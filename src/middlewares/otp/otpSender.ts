@@ -25,3 +25,23 @@ export const sendOTPViaTelegram = async (
     throw new Error(axiosError?.response?.data?.description || "Failed to send OTP via Telegram");
   }
 };
+
+export const sendMSGViaTelegram = async (
+  chatId: string,
+  text: string
+): Promise<void> => {
+  try {
+    await axios.post<TelegramResponse>(
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        chat_id: chatId,
+        text: text,
+        parse_mode: "Markdown"
+      }
+    );
+  } catch (error) {
+    const axiosError = error as AxiosError<TelegramResponse>;
+    console.error("Telegram OTP error:", axiosError?.response?.data);
+    throw new Error(axiosError?.response?.data?.description || "Failed to send OTP via Telegram");
+  }
+};

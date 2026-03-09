@@ -5,6 +5,7 @@ import {
   getOffersBySeller,
   getOffersByListing,
   getOfferById,
+  updateOffer,
   updateOfferStatus,
   withdrawOffer,
 } from "../controllers/offerController";
@@ -19,6 +20,7 @@ router.get("/seller", getOffersBySeller);
 router.get("/listing/:listingId", getOffersByListing);
 router.get("/:id", getOfferById);
 router.post("/", createOffer);
+router.put("/:id", updateOffer);
 router.patch("/:id/status", updateOfferStatus);
 router.patch("/:id/withdraw", withdrawOffer);
 

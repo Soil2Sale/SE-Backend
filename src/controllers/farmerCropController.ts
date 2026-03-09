@@ -43,7 +43,7 @@ export const getAllFarmerCrops = async (
 
     const [farmerCrops, total] = await Promise.all([
       FarmerCrop.find(filter)
-        .populate("farmer_profile_id")
+        .populate({ path: "farmer_profile_id", foreignField: "id" })
         .sort(sortObj)
         .skip(skip)
         .limit(limitNum),
@@ -70,7 +70,7 @@ export const getFarmerCropById = async (
 ): Promise<void> => {
   try {
     const farmerCrop = await FarmerCrop.findOne({ id: req.params.id }).populate(
-      "farmer_profile_id",
+      { path: "farmer_profile_id", foreignField: "id" },
     );
 
     if (!farmerCrop) {
@@ -98,7 +98,7 @@ export const getFarmerCropsByFarmerId = async (
   try {
     const farmerCrops = await FarmerCrop.find({
       farmer_profile_id: req.params.farmerId,
-    }).populate("farmer_profile_id");
+    }).populate({ path: "farmer_profile_id", foreignField: "id" });
 
     res.status(200).json({
       success: true,
@@ -118,7 +118,7 @@ export const getFarmerCropsByCropName = async (
   try {
     const farmerCrops = await FarmerCrop.find({
       crop_name: req.params.cropName,
-    }).populate("farmer_profile_id");
+    }).populate({ path: "farmer_profile_id", foreignField: "id" });
 
     res.status(200).json({
       success: true,

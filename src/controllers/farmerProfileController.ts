@@ -89,7 +89,7 @@ export const getFarmerProfileByUserId = async (
 ): Promise<void> => {
   try {
     const farmerProfile = await FarmerProfile.findOne({
-      user_id: req.params.userId,
+      user_id: req.user?.userId,
     });
 
     if (!farmerProfile) {

@@ -112,7 +112,11 @@ export const getReviewsForUser = async (
 
     const [reviews, total] = await Promise.all([
       RatingReview.find(filter)
-        .populate("reviewer_user_id", "name email")
+        .populate({
+          path: "reviewer_user_id",
+          foreignField: "id",
+          select: "name email",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -149,7 +153,11 @@ export const getReviewsByUser = async (
 
     const [reviews, total] = await Promise.all([
       RatingReview.find(filter)
-        .populate("reviewed_user_id", "name email")
+        .populate({
+          path: "reviewed_user_id",
+          foreignField: "id",
+          select: "name email",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -178,8 +186,16 @@ export const getReviewById = async (
     const { id } = req.params;
 
     const review = await RatingReview.findOne({ id })
-      .populate("reviewer_user_id", "name email")
-      .populate("reviewed_user_id", "name email");
+      .populate({
+        path: "reviewer_user_id",
+        foreignField: "id",
+        select: "name email",
+      })
+      .populate({
+        path: "reviewed_user_id",
+        foreignField: "id",
+        select: "name email",
+      });
 
     if (!review) {
       res.status(404).json({

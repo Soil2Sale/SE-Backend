@@ -7,6 +7,7 @@ import Notification, {
 import { FilterQuery } from "mongoose";
 import { createAuditLog } from "../utils/auditLogger";
 import { AuditAction } from "../models/AuditLog";
+import { emitNotification } from "../socket";
 
 export const createNotification = async (
   req: Request,
@@ -88,6 +89,9 @@ export const createNotification = async (
         "Notification",
         notification.id,
       );
+      try {
+        emitNotification(notification.user_id, notification.toObject());
+      } catch {}
     }
 
     res.status(201).json({

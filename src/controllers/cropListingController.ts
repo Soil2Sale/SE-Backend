@@ -235,7 +235,7 @@ export const createCropListing = async (
       quality_grade,
       quantity,
       expected_price,
-      status: status || CropListingStatus.DRAFT,
+      status: status || CropListingStatus.ACTIVE,
     });
 
     // Create audit log for crop listing creation

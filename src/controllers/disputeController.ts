@@ -35,10 +35,10 @@ export const createDispute = async (
     // Check authorization: allow admins to override, others must be buyer or sender
     const user = req.user as any;
     const isAdmin = user?.role === "Admin";
-    
+
     console.log("User Object:", user); // Debug: Check what role value is in the token
     console.log("Is Admin:", isAdmin);
-    
+
     if (
       !isAdmin &&
       order.buyer_user_id !== raised_by_user_id &&
@@ -123,8 +123,12 @@ export const getDisputesByUser = async (
 
     const [disputes, total] = await Promise.all([
       Dispute.find(filter)
-        .populate("order_id")
-        .populate("raised_by_user_id", "name email")
+        .populate({ path: "order_id", foreignField: "id" })
+        .populate({
+          path: "raised_by_user_id",
+          foreignField: "id",
+          select: "name email",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -153,7 +157,11 @@ export const getDisputesByOrder = async (
     const { orderId } = req.params;
 
     const disputes = await Dispute.find({ order_id: orderId })
-      .populate("raised_by_user_id", "name email")
+      .populate({
+        path: "raised_by_user_id",
+        foreignField: "id",
+        select: "name email",
+      })
       .sort({ created_at: -1 });
 
     res.status(200).json({
@@ -175,8 +183,12 @@ export const getDisputeById = async (
     const { id } = req.params;
 
     const dispute = await Dispute.findOne({ id })
-      .populate("order_id")
-      .populate("raised_by_user_id", "name email phone_number");
+      .populate({ path: "order_id", foreignField: "id" })
+      .populate({
+        path: "raised_by_user_id",
+        foreignField: "id",
+        select: "name email phone_number",
+      });
 
     if (!dispute) {
       res.status(404).json({
@@ -187,7 +199,7 @@ export const getDisputeById = async (
     }
 
     const evidence = await DisputeEvidence.find({ dispute_id: id })
-      .populate("user_id", "name email")
+      .populate({ path: "user_id", foreignField: "id", select: "name email" })
       .sort({ created_at: 1 });
 
     res.status(200).json({
@@ -280,7 +292,10 @@ export const addDisputeEvidence = async (
       return;
     }
 
-    const dispute = await Dispute.findOne({ id }).populate("order_id");
+    const dispute = await Dispute.findOne({ id }).populate({
+      path: "order_id",
+      foreignField: "id",
+    });
     if (!dispute) {
       res.status(404).json({
         success: false,

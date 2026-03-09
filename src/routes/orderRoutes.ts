@@ -7,6 +7,7 @@ import {
   updateOrderStatus,
   updatePaymentStatus,
   cancelOrder,
+  getOrders,
 } from "../controllers/orderController";
 import { authenticate } from "../middlewares/auth";
 
@@ -14,6 +15,7 @@ const router = Router();
 
 router.use(authenticate);
 
+router.get("/", getOrders);
 router.get("/purchases", getOrdersByBuyer);
 router.get("/sales", getOrdersBySeller);
 router.get("/:id", getOrderById);

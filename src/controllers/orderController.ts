@@ -123,8 +123,16 @@ export const getOrdersByBuyer = async (
 
     const [orders, total] = await Promise.all([
       Order.find(filter)
-        .populate("crop_listing_id", "crop_type price_per_kg quality_grade")
-        .populate("sender_user_id", "name email phone_number")
+        .populate({
+          path: "crop_listing_id",
+          foreignField: "id",
+          select: "crop_type price_per_kg quality_grade",
+        })
+        .populate({
+          path: "sender_user_id",
+          foreignField: "id",
+          select: "name email phone_number",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -172,8 +180,16 @@ export const getOrdersBySeller = async (
 
     const [orders, total] = await Promise.all([
       Order.find(filter)
-        .populate("crop_listing_id", "crop_type price_per_kg quality_grade")
-        .populate("buyer_user_id", "name email phone_number")
+        .populate({
+          path: "crop_listing_id",
+          foreignField: "id",
+          select: "crop_type price_per_kg quality_grade",
+        })
+        .populate({
+          path: "buyer_user_id",
+          foreignField: "id",
+          select: "name email phone_number",
+        })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limitNum),
@@ -202,9 +218,17 @@ export const getOrderById = async (
     const { id } = req.params;
 
     const order = await Order.findOne({ id })
-      .populate("crop_listing_id")
-      .populate("buyer_user_id", "name email phone_number")
-      .populate("sender_user_id", "name email phone_number");
+      .populate({ path: "crop_listing_id", foreignField: "id" })
+      .populate({
+        path: "buyer_user_id",
+        foreignField: "id",
+        select: "name email phone_number",
+      })
+      .populate({
+        path: "sender_user_id",
+        foreignField: "id",
+        select: "name email phone_number",
+      });
 
     if (!order) {
       res.status(404).json({
@@ -398,6 +422,87 @@ export const cancelOrder = async (
     res.status(200).json({
       success: true,
       data: order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /orders?role=farmer|buyer — unified role-filtered list
+export const getOrders = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const user_id = req.user?.userId;
+    if (!user_id) {
+      res
+        .status(401)
+        .json({ success: false, message: "User not authenticated" });
+      return;
+    }
+
+    const { role, status, page = "1", limit = "20" } = req.query;
+
+    if (!role || !["farmer", "buyer"].includes(role as string)) {
+      res.status(400).json({
+        success: false,
+        message: "role query param is required and must be 'farmer' or 'buyer'",
+      });
+      return;
+    }
+
+    const filter: FilterQuery<IOrder> =
+      role === "buyer"
+        ? { buyer_user_id: user_id }
+        : { sender_user_id: user_id };
+
+    if (status) {
+      filter.status = status as OrderStatus;
+    }
+
+    const pageNum = Math.max(1, Number(page));
+    const limitNum = Math.min(100, Math.max(1, Number(limit)));
+    const skip = (pageNum - 1) * limitNum;
+
+    const populateOther =
+      role === "buyer"
+        ? Order.find(filter)
+            .populate({
+              path: "crop_listing_id",
+              foreignField: "id",
+              select: "crop_name price_per_kg quality_grade farmer_user_id",
+            })
+            .populate({
+              path: "sender_user_id",
+              foreignField: "id",
+              select: "name email phone_number",
+            })
+        : Order.find(filter)
+            .populate({
+              path: "crop_listing_id",
+              foreignField: "id",
+              select: "crop_name price_per_kg quality_grade farmer_user_id",
+            })
+            .populate({
+              path: "buyer_user_id",
+              foreignField: "id",
+              select: "name email phone_number",
+            });
+
+    const [orders, total] = await Promise.all([
+      populateOther.sort({ created_at: -1 }).skip(skip).limit(limitNum),
+      Order.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+      count: orders.length,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
     });
   } catch (error) {
     next(error);

@@ -12,6 +12,7 @@ export enum ShipmentStatus {
 export interface IShipment extends Document {
   id: string;
   created_at: Date;
+  updated_at: Date;
   order_id: string;
   logistics_provider_profile_id: string;
   logistics_provider_user_id: string;
@@ -23,6 +24,7 @@ export interface IShipment extends Document {
   estimated_cost: number;
   status: ShipmentStatus;
   tracking_code: string;
+  dispatched_at?: Date;
   delivery_confirmed_at?: Date;
 }
 
@@ -32,11 +34,6 @@ const shipmentSchema = new Schema<IShipment>(
       type: String,
       default: () => uuidv4(),
       unique: true,
-      required: true,
-    },
-    created_at: {
-      type: Date,
-      default: Date.now,
       required: true,
     },
     order_id: {
@@ -100,12 +97,15 @@ const shipmentSchema = new Schema<IShipment>(
       unique: true,
       trim: true,
     },
+    dispatched_at: {
+      type: Date,
+    },
     delivery_confirmed_at: {
       type: Date,
     },
   },
   {
-    timestamps: false,
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
     versionKey: false,
   },
 );

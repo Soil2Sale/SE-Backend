@@ -1,0 +1,16 @@
+
+> se-backend@1.0.0 lint
+> eslint "src/**/*.ts"
+
+
+/home/raghav3333/SE-Backend/src/config/telegram.ts
+  38:33  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+/home/raghav3333/SE-Backend/src/middlewares/auth.ts
+  5:3  error  ES2015 module syntax is preferred over namespaces  @typescript-eslint/no-namespace
+
+/home/raghav3333/SE-Backend/src/middlewares/otp/otpSender.ts
+  25:5  error  There is no `cause` attached to the symptom error being thrown  preserve-caught-error
+
+✖ 3 problems (3 errors, 0 warnings)
+

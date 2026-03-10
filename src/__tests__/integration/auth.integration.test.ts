@@ -17,7 +17,7 @@ describe('Auth API (Integration)', () => {
             .post('/api/auth/register')
             .send({
                 name: 'Integration Test User',
-                recovery_email: 'integration@test.com',
+                security_pin: '123456',
                 role: 'Buyer',
                 mobile_number: '9876543210'
             });
@@ -25,7 +25,7 @@ describe('Auth API (Integration)', () => {
         expect(res.status).toBe(201);
         expect(res.body.success).toBe(true);
         expect(res.body.data.user).toBeDefined();
-        expect(res.body.data.user.recovery_email).toBe('integration@test.com');
+        expect(res.body.data.user.name).toBe('Integration Test User');
 
         // Verify that the user physically exists in the database
         const userInDb = await User.findOne({ mobile_number: '9876543210' });
@@ -36,7 +36,7 @@ describe('Auth API (Integration)', () => {
     it('should login an existing verified user successfully and generate a real JWT', async () => {
         // 1. Create the user
         await request(app).post('/api/auth/register').send({
-            name: 'Login Test', recovery_email: 'login@test.com', role: 'Buyer', mobile_number: '9999999999'
+            name: 'Login Test', security_pin: '123456', role: 'Buyer', mobile_number: '9999999999'
         });
 
         // 2. We must manually verify and link telegram to allow login based on the controller checks
@@ -48,7 +48,7 @@ describe('Auth API (Integration)', () => {
         // 3. Request OTP
         const otpReq = await request(app)
             .post('/api/auth/login')
-            .send({ identifier: '9999999999' }); // Logging in with mobile number
+            .send({ mobile_number: '9999999999', security_pin: '123456' }); // Logging in with mobile number and pin
 
         expect(otpReq.status).toBe(200);
         const userId = otpReq.body.data.userId;

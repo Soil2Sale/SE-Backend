@@ -19,7 +19,7 @@ export interface IUser extends Document {
   role: UserRole;
   aadhaar_verified: boolean;
   business_verified: boolean;
-  recovery_email?: string;
+  security_pin: string;
   telegram_chat_id?: string;
   is_telegram_linked: boolean;
   is_verified: boolean;
@@ -73,14 +73,9 @@ const userSchema = new Schema<IUser>(
       default: false,
       required: true
     },
-    recovery_email: {
+    security_pin: {
       type: String,
-      trim: true,
-      lowercase: true,
-      match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        'Please provide a valid email address'
-      ]
+      required: [true, 'Security PIN is required']
     },
     telegram_chat_id: {
       type: String

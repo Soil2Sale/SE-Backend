@@ -112,7 +112,7 @@ export const createUser = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { name, mobile_number, role, recovery_email } = req.body;
+    const { name, mobile_number, role } = req.body;
 
     const existingUser = await User.findOne({ mobile_number });
     if (existingUser) {
@@ -127,7 +127,6 @@ export const createUser = async (
       name,
       mobile_number,
       role,
-      recovery_email,
     });
 
     res.status(201).json({
@@ -145,12 +144,11 @@ export const updateUser = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { name, mobile_number, recovery_email, role } = req.body;
+    const { name, mobile_number, role } = req.body;
 
     const updateData: Partial<IUser> = {};
     if (name) updateData.name = name;
     if (mobile_number) updateData.mobile_number = mobile_number;
-    if (recovery_email) updateData.recovery_email = recovery_email;
     if (role) updateData.role = role;
 
     const user = await User.findOneAndUpdate(

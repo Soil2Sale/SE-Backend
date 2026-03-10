@@ -64,7 +64,6 @@ export const getFarmerFullProfile = async (
           id: user.id,
           name: user.name,
           mobile_number: user.mobile_number,
-          recovery_email: user.recovery_email,
           role: user.role,
           aadhaar_verified: user.aadhaar_verified,
           business_verified: user.business_verified,

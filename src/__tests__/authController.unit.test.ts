@@ -67,7 +67,7 @@ describe('authController.register (unit)', () => {
             toObject: () => ({ id: 'u-1', name: 'Kanha', role: 'Farmer' }),
         });
 
-        const req = mockReq({ name: 'Kanha', mobile_number: '9876543210', role: 'Farmer' });
+        const req = mockReq({ name: 'Kanha', mobile_number: '9876543210', role: 'Farmer', security_pin: '123456' });
         const res = mockRes();
         await register(req as Request, res as Response, mockNext);
         expect(res.status).toHaveBeenCalledWith(201);
@@ -82,7 +82,7 @@ describe('authController.register (unit)', () => {
 
     it('calls next(error) on DB failure', async () => {
         (User.create as jest.Mock).mockRejectedValue(new Error('DB down'));
-        const req = mockReq({ name: 'Kanha', mobile_number: '9876543210', role: 'Farmer' });
+        const req = mockReq({ name: 'Kanha', mobile_number: '9876543210', role: 'Farmer', security_pin: '123456' });
         const res = mockRes();
         await register(req as Request, res as Response, mockNext);
         expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
@@ -93,8 +93,8 @@ describe('authController.register (unit)', () => {
 describe('authController.login (unit)', () => {
     beforeEach(() => jest.clearAllMocks());
 
-    it('returns 400 for invalid identifier format', async () => {
-        const req = mockReq({ identifier: 'not-valid' });
+    it('returns 400 when missing required fields', async () => {
+        const req = mockReq({ mobile_number: '9000000000' });
         const res = mockRes();
         await login(req as Request, res as Response, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
@@ -102,7 +102,7 @@ describe('authController.login (unit)', () => {
 
     it('returns 404 when user is not found', async () => {
         (User.findOne as jest.Mock).mockResolvedValue(null);
-        const req = mockReq({ identifier: '9000000000' });
+        const req = mockReq({ mobile_number: '9000000000', security_pin: '123456' });
         const res = mockRes();
         await login(req as Request, res as Response, mockNext);
         expect(res.status).toHaveBeenCalledWith(404);

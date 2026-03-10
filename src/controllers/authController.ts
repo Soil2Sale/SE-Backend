@@ -12,6 +12,7 @@ import { generateOTP, validateOTP } from "../middlewares/otp/otpService";
 import { sendOTPViaTelegram } from "../middlewares/otp/otpSender";
 import { createAuditLog } from "../utils/auditLogger";
 import { AuditAction } from "../models/AuditLog";
+const crypto = require("crypto");
 
 const setRefreshTokenCookie = (res: Response, token: string): void => {
   const isProduction = process.env.NODE_ENV === "production";
@@ -31,7 +32,7 @@ export const register = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { name, mobile_number, role, recovery_email } = req.body;
+    const { name, mobile_number, role, security_pin } = req.body;
 
     if (!name || !mobile_number || !role) {
       res.status(400).json({
@@ -41,27 +42,33 @@ export const register = async (
       return;
     }
 
-    // const existingUser = await User.findOne({
-    //   $or: [{ mobile_number }, { recovery_email }],
-    // });
+    const existingUser = await User.findOne({ mobile_number });
 
-    // if (existingUser) {
-    //   res.status(400).json({
-    //     success: false,
-    //     message: "User with this phone or email already exists",
-    //   });
-    //   return;
-    // }
+    if (existingUser) {
+      if (existingUser.is_verified) {
+        res.status(400).json({
+          success: false,
+          message: "User with this phone number already exists and is verified. Please log in.",
+        });
+        return;
+      } else {
+        // Remove the dangling unverified user to allow a fresh registration attempt
+        await User.deleteOne({ _id: existingUser._id });
+      }
+    }
+
+    const hashedPin = crypto.createHash("sha256").update(security_pin).digest("hex");
 
     const user = await User.create({
       name,
       mobile_number,
       role,
-      recovery_email,
+      security_pin: hashedPin,
     });
 
     const userResponse = user.toObject() as any;
     delete userResponse.otp_secret;
+    delete userResponse.security_pin;
 
     res.status(201).json({
       success: true,
@@ -155,28 +162,31 @@ export const login = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { identifier } = req.body;
+    const { mobile_number, security_pin } = req.body;
 
-    const isEmail = /^\S+@\S+\.\S+$/.test(identifier);
-    const isMobile = /^[6-9]\d{9}$/.test(identifier);
-
-    if (!isEmail && !isMobile) {
+    if (!mobile_number || !security_pin) {
       res.status(400).json({
         success: false,
-        message: "Invalid email or mobile number format",
+        message: "Mobile number and Security PIN are required",
       });
       return;
     }
 
-    const query = isEmail
-      ? { recovery_email: identifier }
-      : { mobile_number: identifier };
-    const user = await User.findOne(query);
+    const user = await User.findOne({ mobile_number });
 
     if (!user) {
       res.status(404).json({
         success: false,
         message: "User not found",
+      });
+      return;
+    }
+
+    const hashedInputPin = crypto.createHash("sha256").update(security_pin).digest("hex");
+    if (user.security_pin !== hashedInputPin) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
       });
       return;
     }
@@ -211,11 +221,7 @@ export const login = async (
     const otp = generateOTP(user.otp_secret);
 
     try {
-      if (isEmail) {
-        await sendOTPEmail(identifier, otp);
-      } else {
-        await sendOTPViaTelegram(user.telegram_chat_id!, otp);
-      }
+      await sendOTPViaTelegram(user.telegram_chat_id!, otp);
     } catch (otpError) {
       const errorMessage =
         otpError instanceof Error ? otpError.message : "Failed to send OTP";
@@ -232,10 +238,10 @@ export const login = async (
 
     res.status(200).json({
       success: true,
-      message: `OTP sent successfully to your ${isEmail ? "email" : "mobile number"}`,
+      message: `OTP sent successfully to your Telegram account`,
       data: {
         userId: user.id,
-        method: isEmail ? "email" : "telegram",
+        method: "telegram",
       },
     });
   } catch (error) {

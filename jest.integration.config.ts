@@ -4,7 +4,7 @@ const config: Config = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     setupFilesAfterEnv: ['<rootDir>/src/__tests__/integration/setup.ts'],
-    testMatch: ['<rootDir>/src/__tests__/integration/**/*.test.ts'],
+    testMatch: ['<rootDir>/src/__tests__/integration/**/*.integration.test.ts'],
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
         '^uuid$': '<rootDir>/src/__tests__/__mocks__/uuid.ts',
@@ -18,7 +18,13 @@ const config: Config = {
             isolatedModules: true,
         }],
     },
-    testTimeout: 60000,
+    testPathIgnorePatterns: [
+        '<rootDir>/dist/',
+        '<rootDir>/node_modules/'
+    ],
+    // 90s timeout: accounts for mongodb-memory-server binary download on first local run
+    testTimeout: 90000,
+    verbose: true,
 };
 
 export default config;

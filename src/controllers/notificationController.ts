@@ -91,7 +91,9 @@ export const createNotification = async (
       );
       try {
         emitNotification(notification.user_id, notification.toObject());
-      } catch {}
+      } catch (socketErr) {
+        // Ignored: socket failures shouldn't break the HTTP request
+      }
     }
 
     res.status(201).json({

@@ -101,17 +101,22 @@ export const getDisputesByUser = async (
       return;
     }
 
-    const orders = await Order.find(
-      {
-        $or: [{ buyer_user_id: user_id }, { sender_user_id: user_id }],
-      },
-      { id: 1 },
-    );
-    const orderIds = orders.map((o) => o.id);
+    let filter: FilterQuery<IDispute> = {};
 
-    const filter: FilterQuery<IDispute> = {
-      $or: [{ raised_by_user_id: user_id }, { order_id: { $in: orderIds } }],
-    };
+    const user = req.user as any;
+    if (user?.role !== "Admin" && user?.role !== "ADMIN") {
+      const orders = await Order.find(
+        {
+          $or: [{ buyer_user_id: user_id }, { sender_user_id: user_id }],
+        },
+        { id: 1 },
+      );
+      const orderIds = orders.map((o) => o.id);
+
+      filter = {
+        $or: [{ raised_by_user_id: user_id }, { order_id: { $in: orderIds } }],
+      };
+    }
 
     if (status) {
       filter.status = status as DisputeStatus;

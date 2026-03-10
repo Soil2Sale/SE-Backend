@@ -156,9 +156,14 @@ export const getTransactionsByUser = async (
       return;
     }
 
-    const filter: FilterQuery<ITransaction> = {
-      $or: [{ sender_user_id: user_id }, { receiver_user_id: user_id }],
-    };
+    let filter: FilterQuery<ITransaction> = {};
+
+    const user = req.user as any;
+    if (user?.role !== "Admin" && user?.role !== "ADMIN") {
+      filter = {
+        $or: [{ sender_user_id: user_id }, { receiver_user_id: user_id }],
+      };
+    }
 
     if (type) {
       filter.type = type as TransactionType;
@@ -197,15 +202,15 @@ export const getTransactionsByUser = async (
         const [senderWallet, receiverWallet] = await Promise.all([
           transaction.sender_wallet_id !== "EXTERNAL"
             ? Wallet.findOne(
-                { id: transaction.sender_wallet_id },
-                "user_id balance",
-              ).lean()
+              { id: transaction.sender_wallet_id },
+              "user_id balance",
+            ).lean()
             : null,
           transaction.receiver_wallet_id !== "EXTERNAL"
             ? Wallet.findOne(
-                { id: transaction.receiver_wallet_id },
-                "user_id balance",
-              ).lean()
+              { id: transaction.receiver_wallet_id },
+              "user_id balance",
+            ).lean()
             : null,
         ]);
 
@@ -298,15 +303,15 @@ export const getTransactionsByOrder = async (
         const [senderWallet, receiverWallet] = await Promise.all([
           transaction.sender_wallet_id !== "EXTERNAL"
             ? Wallet.findOne(
-                { id: transaction.sender_wallet_id },
-                "user_id balance",
-              ).lean()
+              { id: transaction.sender_wallet_id },
+              "user_id balance",
+            ).lean()
             : null,
           transaction.receiver_wallet_id !== "EXTERNAL"
             ? Wallet.findOne(
-                { id: transaction.receiver_wallet_id },
-                "user_id balance",
-              ).lean()
+              { id: transaction.receiver_wallet_id },
+              "user_id balance",
+            ).lean()
             : null,
         ]);
 

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import StorageFacility, { IStorageFacility } from "../models/StorageFacility";
 import { FilterQuery } from "mongoose";
+import LogisticsProviderProfile from "../models/LogisticsProviderProfile";
 
 export const createStorageFacility = async (
   req: Request,
@@ -44,6 +45,16 @@ export const createStorageFacility = async (
       }
     }
 
+    const user_id = req.user.userId;
+    const profile = await LogisticsProviderProfile.findOne({ user_id });
+    if (!profile) {
+      res.status(404).json({
+        success: false,
+        message: "Logistics provider profile not found for this user",
+      });
+      return;
+    }
+
     const createdFacilities = await StorageFacility.create(
       facilities.map((facility) => ({
         name: facility.name,
@@ -52,6 +63,8 @@ export const createStorageFacility = async (
         capacity: facility.capacity,
         availability: true,
         pricing_per_unit: facility.pricing_per_unit,
+        logistics_provider_user_id: req.user!.userId,
+        logistics_provider_profile_id: profile.id,
       })),
     );
 

@@ -96,7 +96,7 @@ describe('Farmer Profile API (Integration)', () => {
         });
 
         const res = await request(app)
-            .get('/api/farmer-profiles/user')
+            .get(`/api/farmer-profiles/user/${farmerId.toString()}`)
             .set('Authorization', authHeader);
 
         expect(res.status).toBe(200);

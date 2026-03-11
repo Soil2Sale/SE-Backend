@@ -38,7 +38,14 @@ import auditLogRoutes from "./routes/auditLogRoutes";
 const app: Application = express();
 
 app.use(helmet());
-app.use(cors({ origin: [process.env.CLIENT_URL, "http://localhost:3001"] || "http://localhost:3001", credentials: true }));
+const origins = [process.env.CLIENT_URL, "http://localhost:3001"].filter(Boolean);
+
+app.use(
+  cors({
+    origin: origins,
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

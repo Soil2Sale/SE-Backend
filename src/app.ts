@@ -38,7 +38,10 @@ import auditLogRoutes from "./routes/auditLogRoutes";
 const app: Application = express();
 
 app.use(helmet());
-const origins = [process.env.CLIENT_URL, "http://localhost:3001"].filter(Boolean);
+const origins: string[] = [
+  process.env.CLIENT_URL!,
+  "http://localhost:3001",
+];
 
 app.use(
   cors({
